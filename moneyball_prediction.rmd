@@ -1,0 +1,833 @@
+---
+title: "DATA 621 Moneyball - Predicting the Number of Wins for a Baseball Team"
+author: "Sarah Wigodsky"
+date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github 
+---
+
+```{r moneyball_data, echo=FALSE}
+moneyball_df <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/moneyball-training-data.csv", stringsAsFactors = FALSE)
+#nrow(moneyball_df)
+moneyball_df <- moneyball_df[-1]
+```
+
+##DATA EXPLORATION
+The moneyball training set consists of statistics from professional baseball teams from 1871 to 2006.  There are 2276 records, which contain statistics of the performance of a particular team in a particular year.  The statistics are adjusted to a season with 162 games.  
+
+The following is a list of the statistics that will be used to build a linear model to predict the number of wins:
+
+ - base hits by batters
+ - doubles hit by batters
+ - triples hit by batters
+ - homeruns hit by batters
+ - walks by batters
+ - batters hit by pitch
+ - strikeouts by batters
+ - stolen bases 
+ - caught stealing bases
+ - errors
+ - double plays
+ - walks allows
+ - hits allowed
+ - homeruns allowed
+ - strikeouts by pitchers
+
+The following are sumamry statistics for each of the variables described above:
+```{r summary_statistics, echo=FALSE}
+moneyball_df_wins_removed <- moneyball_df[-1]
+colnames(moneyball_df_wins_removed) <-c("base_hits","doubles_hit","triples_hit","homeruns_hit","walks_by_batters","strikeouts_at_bat","stolen_bases","caught_stealing_bases","batters_hit_by_pitch","hits_allowed","homeruns_allowed","walks_allowed","strikeouts_by_pitchers","errors","double_plays")
+summary(moneyball_df_wins_removed)
+```
+
+####Hits Allowed
+The mean is larger than the median for hits allowed and the distribution is skewed to the right, which can be seen in the histogram below. In addition, the maximum number of hits allowed is 30,132, which is about 17 times greater than the mean.  The boxplot below displays a large number of outliers.
+
+
+```{r plot_hits_allowed, echo=FALSE}
+plot(moneyball_df_wins_removed$hits_allowed, ylab="number of hits allowed", main="Hits Allowed In 1 Season")
+hist(moneyball_df_wins_removed$hits_allowed, xlab="number hits allowed",main="Hits Allowed In 1 Season")
+boxplot(moneyball_df_wins_removed$hits_allowed, main="Hits Allowed In 1 Season")
+```
+
+####Errors 
+The mean is larger than the median for errors and the distribution is skewed to the right, which can be seen in the histogram below. In addition, the maximum number of errors is 1898, which is about 7.7 times greater than the mean.  The boxplot below displays a large number of outliers.
+
+
+```{r errors, echo=FALSE}
+plot(moneyball_df_wins_removed$errors, ylab="number of errors", main="Number of Errors In 1 Season")
+hist(moneyball_df_wins_removed$errors, xlab="number of errors",main="Number of Errors In 1 Season")
+boxplot(moneyball_df_wins_removed$errors, main="Number of Errors In 1 Season")
+```
+
+
+####Strikeouts By Pitchers
+The mean is larger than the median for hits allowed and the distribution is skewed to the right, which can be seen in the histogram below. In addition, the maximum number of hits allowed is 19,278, which is about 23.5 times greater than the mean.  The boxplot below displays the outliers.
+
+```{r strikeouts_by_pitchers, echo=FALSE}
+plot(moneyball_df_wins_removed$strikeouts_by_pitchers, ylab="number of strikeouts by pitchers", main="Strikeouts By Pitchers In 1 Season")
+hist(moneyball_df_wins_removed$strikeouts_by_pitchers, xlab="number of strikeouts by pitchers",main="Strikeouts By Pitchers In 1 Season")
+boxplot(moneyball_df_wins_removed$strikeouts_by_pitchers, main="Strikeouts By Pitchers In 1 Season")
+```
+
+
+```{r plot2, echo=FALSE, message = FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+par(mar = c(2, 5, 4, 2)+ 0.1)
+par(cex.axis=.6)
+boxplot(moneyball_df_wins_removed, las=2,horizontal=TRUE, ylim=c(0,3000))
+```
+
+###Missing Data
+
+The following variables have missing values:  
+
+ - Strikeouts at Bat (102 missing data points)
+ - Batters hit by pitch (2085 missing data points)
+ - Caught stealing (772 missing data points)
+ - Stolen bases (131 missing data points)
+ - Double Plays (286 missing data points)
+ - Hits allowed (41 missing data points)
+ - Strikeouts by pitchers (107 missing data points)
+ - Errors (46 missing data points)
+```{r missing_data, echo=FALSE}
+#summary(moneyball_df_wins_removed)
+#library(spatial)
+par(mar = c(2, 5, 4, 2)+ 0.1)
+par(cex.axis=.5)
+image(is.na(moneyball_df_wins_removed), axes=FALSE,col=gray(1:0), main='Missing Data')
+axis(2, at=0:14/14, labels=colnames(moneyball_df_wins_removed),las=2)
+axis(1, at=0:2275/2275, labels=FALSE)
+```
+
+
+
+
+##DATA PREPARATION
+####Hits Allowed
+These outliers reflect an issue with the data, as 30,132 hits allowed per season is not possible.  That would mean that a team averaged 186 hits against them per game! The most ever hit in a game is 33.  Out of a concern that the outliers will make creating a linear regression model challenging, I will remove all hits allowed above 5000.
+
+
+```{r remove_outliers_hits, echo=FALSE}
+moneyball_df_wins_removed$hits_allowed[moneyball_df_wins_removed$hits_allowed > 5000] <- NA
+plot(moneyball_df_wins_removed$hits_allowed, ylab="number of hits allowed", main="Hits Allowed In 1 Season")
+hist(moneyball_df_wins_removed$hits_allowed, xlab="number hits allowed",main="Hits Allowed In 1 Season")
+boxplot(moneyball_df_wins_removed$hits_allowed, main="Hits Allowed In 1 Season")
+```
+
+####Errors
+Out of a concern that the outliers will make creating a linear regression model challenging, I will remove all errors above 1000.
+
+```{r remove_outliers_errors, echo=FALSE}
+moneyball_df_wins_removed$errors[moneyball_df_wins_removed$errors > 1000] <- NA
+plot(moneyball_df_wins_removed$errors, ylab="number of errors", main="Number of Errors In 1 Season")
+hist(moneyball_df_wins_removed$errors, xlab="number of errors",main="Number of Errors In 1 Season")
+boxplot(moneyball_df_wins_removed$errors, main="Number of Errors In 1 Season")
+```
+
+####Strikeouts By Pitchers
+These outliers reflect an issue with the data, as 19,278 strikeouts by pitchers in one season is not possible.  That would mean that a team averaged 119 strikeouts per game! Out of a concern that the outliers will make creating a linear regression model challenging, I will remove all strikeouts by pitchers above 3000.
+
+```{r remove_outliers_strikeouts_by_pitchers, echo=FALSE}
+moneyball_df_wins_removed$strikeouts_by_pitchers[moneyball_df_wins_removed$strikeouts_by_pitchers > 3000] <- NA
+plot(moneyball_df_wins_removed$strikeouts_by_pitchers, ylab="number of strikeouts by pitchers", main="Strikeouts By Pitchers In 1 Season")
+hist(moneyball_df_wins_removed$strikeouts_by_pitchers, xlab="number of strikeouts by pitchers",main="Strikeouts By Pitchers In 1 Season")
+boxplot(moneyball_df_wins_removed$strikeouts_by_pitchers, main="Strikeouts By Pitchers In 1 Season")
+```
+
+####Missing Data
+Because there is such a high number of missing values for batters hit by pitches, I will remove variable from the model.  I do not think it would be helpful to impute values since there are so many missing values and removing all data sets that have missing values for that field would leave the data set very small. I will set the other missing values to be equal to the median for that variable.  I am choosing the median and not the mean so that the value is less affected by outliers.
+
+```{r removing_fields_with_many_missing_values, echo=FALSE}
+moneyball_df_train <- subset(moneyball_df_wins_removed, select=-(batters_hit_by_pitch))
+
+moneyball_df_train$strikeouts_at_bat[is.na(moneyball_df_train$strikeouts_at_bat)] <- median(moneyball_df_train$strikeouts_at_bat, na.rm=T)
+
+moneyball_df_train$caught_stealing_bases[is.na(moneyball_df_train$caught_stealing_bases)] <- median(moneyball_df_train$caught_stealing_bases, na.rm=T)
+
+moneyball_df_train$stolen_bases[is.na(moneyball_df_train$stolen_bases)] <- median(moneyball_df_train$stolen_bases, na.rm=T)
+
+moneyball_df_train$double_plays[is.na(moneyball_df_train$double_plays)] <- median(moneyball_df_train$double_plays, na.rm=T)
+
+moneyball_df_train$hits_allowed[is.na(moneyball_df_train$hits_allowed)] <- median(moneyball_df_train$hits_allowed, na.rm=T)
+
+moneyball_df_train$strikeouts_by_pitchers[is.na(moneyball_df_train$strikeouts_by_pitchers)] <- median(moneyball_df_train$strikeouts_by_pitchers, na.rm=T)
+
+moneyball_df_train$errors[is.na(moneyball_df_train$errors)] <- median(moneyball_df_train$errors, na.rm=T)
+```
+
+####Correlation of Variables
+The following are the correlation values between each of hte variables. The closer the correlation is to 1 or -1, the more highly correlated the variables.
+```{r correlation, echo=FALSE}
+correlation <- cor(moneyball_df_train, method = "pearson")
+correlation
+```
+
+There is a positive correlation between base hits and doubles, doubles and home runs hit, triples and errors, homeruns hit and walks at bat, home runs hits and strikeouts at bat, home runs hit and stolen bases, homeruns hit and homeruns allowed, strikeout at bat and homeruns allowed, strikeout at bat and strikeouts by pitchers, hits allowed and errors, and homeruns allowed and strikeouts by pitchers.
+
+There is a negative correlation between triples hit and strikeouts at bat, triples hit and homeruns hit, triples hit and homeruns allowed, homeruns hit and errors, and homeruns allowed and errors.
+
+The variables that were most correlated with each other are homeruns hit and homeruns allowed as well as 
+strikeouts at bat and strikeouts by pitchers.  This is a surprise, as I would not have expected the number of homeruns a team hit to be related to the number of homeruns a team allowed.  Nor would I have expected the number of strikeouts at bat to be related to the number of strikeouts by pitchers for the same team.\n\
+
+To address these correlations, I will combine home runs hits and homeruns allowed by adding their values.  In this way, the influence of these variabes will be included only once in the regression model. \n\
+
+I will combine the variables for strikeouts at bat and strikeouts by pitchers in the same way.
+After creating the new values, I will remove the original columns in the data table.
+
+```{r correlated_variables, echo=FALSE}
+library(dplyr)
+moneyball_df_train <- moneyball_df_train %>%
+  mutate(homeruns = homeruns_hit+homeruns_allowed) %>%
+  mutate(strikeouts = strikeouts_at_bat+strikeouts_by_pitchers) 
+  
+moneyball_df_train <- select(moneyball_df_train, -c(homeruns_hit,homeruns_allowed, strikeouts_at_bat, strikeouts_by_pitchers))
+```
+
+
+##Build Models
+
+####Breaking the data set into a training set and a testing set
+The data is shuffled randomly. 60% of the data is in the training set and 40% of the data is in the testing set.
+
+```{r training and testing data, echo=FALSE, cache=TRUE}
+n <- nrow(moneyball_df_train)
+moneyball_df_train <- cbind(moneyball_df_train, moneyball_df$TARGET_WINS)
+shuffle_df <- moneyball_df_train[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train <- shuffle_df[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test <- shuffle_df[test_indeces,]
+```
+
+####Backward Elimination - Linear Regression Model
+A linear regression model will be built using the backward elimination model.  Initially all of the variables will be present, and then they will be removed one at a time.  The variable with the highest p value, which has the least affect on wins, will be elinimated first.  Variables will be removed until every predictor has a p value below 0.05.
+
+```{r backward-elimination1, echo=FALSE}
+wins_lm <- lm(`moneyball_df$TARGET_WINS` ~ ., data=train)
+summary(wins_lm)
+```
+
+Strikeouts has the (highest p value) lowest affect on wins and will be removed next.  
+```{r remove_strikeouts, echo=FALSE}
+wins_lm <- update(wins_lm, .~. -strikeouts, data = train)
+summary(wins_lm)
+```
+
+Caught stealing bases has the least affect on wins and will be removed.
+```{r remove_caught_stealing_bases, echo=FALSE}
+wins_lm <- update(wins_lm, .~. -caught_stealing_bases, data = train)
+summary(wins_lm)
+```
+Errors has the lowest affect on wins and will be removed next.  
+```{r remove_errors, echo=FALSE}
+wins_lm <- update(wins_lm, .~. -errors, data = train)
+summary(wins_lm)
+```
+
+All of the remaining variables have p values lower that 0.05, which indicates that they are signficant. A p value below 0.05 indicates strong evidence against the null hypothesis that the variable in question does not affect wins.  \n\
+
+The adjusted R squared value is .3133.  31.33% of the variability in wins is accounted for by the model.
+
+\n\
+The F statistic is 52.85, which is high, and further indicates that these variables are signficiant. 
+The following graphs look for patterns in the residuals.
+
+```{r done, echo=FALSE, eval=TRUE}
+plot(fitted(wins_lm),resid(wins_lm))
+qqnorm(resid(wins_lm))
+qqline(resid(wins_lm))
+```
+
+The plot of the residuals vs. the fitted values shows no pattern, indicating theat the variability in the residuals is nearly constant. The residuals mostly follow the line on the QQ plot, indicating that they are nearly normal.
+
+###Backward Elimination -Using a different training set by shuffling the data again.
+```{r training_and_testing_data2, echo=FALSE, cache=TRUE}
+shuffle_df2 <- moneyball_df_train[sample(n),]
+train_indeces2 <- 1:round(0.6*n)
+train2 <- shuffle_df2[train_indeces2,]
+test_indeces2 <- (round(.6*n)+1):n
+test2 <- shuffle_df2[test_indeces2,]
+```
+
+```{r backward-elimination2, echo=FALSE}
+wins_lm2 <- lm(`moneyball_df$TARGET_WINS` ~ ., data=train2)
+summary(wins_lm2)
+```
+
+Strikeouts has the (highest p value) lowest affect on wins and will be removed.  
+```{r remove_strikeouts2, echo=FALSE}
+wins_lm2 <- update(wins_lm2, .~. -strikeouts, data = train2)
+summary(wins_lm2)
+```
+
+Caught stealing bases has the lowest affect on wins and will be removed.  
+```{r remove_caught_stealing_bases2, echo=FALSE}
+wins_lm2 <- update(wins_lm2, .~. -caught_stealing_bases, data = train2)
+summary(wins_lm2)
+```
+
+
+Doubles hit has the lowest affect on wins and will be removed.  
+```{r remove_doubleshit2, echo=FALSE}
+wins_lm2 <- update(wins_lm2, .~. -doubles_hit, data = train2)
+summary(wins_lm2)
+```
+
+
+All of the remaining variables have p values lower that 0.05, which indicates that they are signficant. A p value below 0.05 indicates strong evidence against the null hypothesis that the variable in question does not affect wins.  \n\
+
+The adjusted R squared value is .312.  31.2% of the variability in wins is accounted for by the model.
+
+\n\
+The F statistic is 69.77, which is high, and further indicates that these variables are signficiant. 
+\n\
+Although the first and second model have very similar adjusted R squared values, they differ in that the first model includes doubles hit and removes errors, which the second model removes doubles hit and includes errors.
+\n\
+
+The following graphs look for patterns in the residuals.
+
+```{r model2, echo=FALSE}
+plot(fitted(wins_lm2),resid(wins_lm2))
+qqnorm(resid(wins_lm2))
+qqline(resid(wins_lm2))
+```
+
+The plot of the residuals vs. the fitted values shows no pattern, indicating theat the variability in the residuals is nearly constant. The residuals mostly follow the line on the QQ plot, indicating that they are nearly normal.
+
+
+####Building a Logarthmic model - Using backward elimination
+In order to build a logarithmic model, all zero values not be given a non-zero value.  I imputed 0.001 for every zero value in the data set.
+```{r backward-elimination3, echo=FALSE}
+train3 <- train
+train3[train3==0] <- 0.001
+wins_lm3 <- lm(log(`moneyball_df$TARGET_WINS`) ~ ., data=train3)
+summary(wins_lm3)
+```
+
+Hits allowed has the (highest p value) lowest affect on wins and will be removed.  
+```{r remove_hits_allowed3, echo=FALSE}
+wins_lm3 <- update(wins_lm3, .~. -hits_allowed, data = train3)
+summary(wins_lm3)
+```
+
+Homeruns has the lowest affect on wins and will be removed.  
+```{r remove_homeruns3, echo=FALSE}
+wins_lm3 <- update(wins_lm3, .~. -homeruns, data = train3)
+summary(wins_lm3)
+```
+
+
+
+Stolen bases has the lowest affect on wins and will be removed.  
+```{r remove_stolen_bases3, echo=FALSE}
+wins_lm3 <- update(wins_lm3, .~. -stolen_bases, data = train3)
+summary(wins_lm3)
+```
+
+
+Errors has the lowest affect on wins and will be removed.  
+```{r remove_errors3, echo=FALSE}
+wins_lm3 <- update(wins_lm3, .~. -errors, data = train3)
+summary(wins_lm3)
+```
+
+All of the remaining variables have p values lower that 0.05, which indicates that they are signficant. A p value below 0.05 indicates strong evidence against the null hypothesis that the variable in question does not affect wins.  \n\
+
+The adjusted R squared value is .2413.  24.13% of the variability in wins is accounted for by the model.
+
+\n\
+The F statistic is 55.27, which is high, and further indicates that these variables are signficiant. 
+\n\
+```{r model3, echo=FALSE}
+
+plot(fitted(wins_lm3),resid(wins_lm3))
+qqnorm(resid(wins_lm3))
+qqline(resid(wins_lm3))
+```
+
+The graph of hte residuals vs. fitted values shows a narrowing at higher values, indicating that the distribution of residuals is not uniform.
+\n\
+The logarithmic model has a lower adjusted R squared value than the previous 2 models and a distribution of residuals that is not completely uniform.  The logarithmic model is not an appropriate choice for this data.
+
+####Building a model in which cases with NA are not used to create the model. (This model will not impute missing values.)
+```{r model_removing_allNAs, echo=FALSE, cache=TRUE}
+moneyball_df_train4 <- moneyball_df_wins_removed %>%
+  mutate(homeruns = homeruns_hit+homeruns_allowed) %>%
+  mutate(strikeouts = strikeouts_at_bat+strikeouts_by_pitchers) 
+moneyball_df_train4 <- cbind(moneyball_df_train4, moneyball_df$TARGET_WINS)
+  
+moneyball_df_train4 <- select(moneyball_df_train4, -c(homeruns_hit,homeruns_allowed, strikeouts_at_bat, strikeouts_by_pitchers))
+shuffle_df4 <- moneyball_df_train4[sample(n),]
+train_indeces4 <- 1:round(0.6*n)
+train4 <- shuffle_df4[train_indeces4,]
+test_indeces4 <- (round(.6*n)+1):n
+test4 <- shuffle_df4[test_indeces4,]
+
+wins_lm4 <- lm(`moneyball_df$TARGET_WINS` ~ ., data=train4)
+summary(wins_lm4)
+```
+
+Stolen bases has the lowest affect on wins and will be removed.  
+```{r remove_stolen_bases4, echo=FALSE}
+wins_lm4 <- update(wins_lm4, .~. -stolen_bases, data = train4)
+summary(wins_lm4)
+```
+
+Caught stealing bases has the lowest affect on wins and will be removed.  
+```{r remove_caught_stealing_bases4, echo=FALSE}
+wins_lm4 <- update(wins_lm4, .~. -caught_stealing_bases, data = train4)
+summary(wins_lm4)
+```
+
+Triples hit has the lowest affect on wins and will be removed.  
+```{r remove_triples_hit4, echo=FALSE}
+wins_lm4 <- update(wins_lm4, .~. -triples_hit, data = train4)
+summary(wins_lm4)
+```
+Hits allowed has the lowest affect on wins and will be removed.  
+```{r remove_hits_allowed4, echo=FALSE}
+wins_lm4 <- update(wins_lm4, .~. -hits_allowed, data = train4)
+summary(wins_lm4)
+```
+
+Walks by batters has the lowest affect on wins and will be removed.  
+```{r remove_walk_by_battesrs4, echo=FALSE}
+wins_lm4 <- update(wins_lm4, .~. -walks_by_batters, data = train4)
+summary(wins_lm4)
+```
+
+Base hits has the lowest affect on wins and will be removed.  
+```{r remove_base_hits4, echo=FALSE}
+wins_lm4 <- update(wins_lm4, .~. -base_hits, data = train4)
+summary(wins_lm4)
+```
+
+All of the remaining variables have p values lower that 0.05, which indicates that they are signficant. A p value below 0.05 indicates strong evidence against the null hypothesis that the variable in question does not affect wins.  \n\
+The adjusted R squared value is .5077  50.77% of the variability in wins is accounted for by the model.  This is signficantly higher than the previous 3 models.
+\n\
+The F statistic is 17.8, which is high, and further indicates that these variables are signficiant. 
+\n\
+
+```{r model4, echo=FALSE}
+
+plot(fitted(wins_lm4),resid(wins_lm4))
+qqnorm(resid(wins_lm4))
+qqline(resid(wins_lm4))
+```
+
+The residual plots show no pattern and the residuas look nearly normal.
+
+###Using the Test Set To Make and Evaluate Predictions from Each of the 4 Models Built 
+####Prediction from Model 1
+The root mean square error from model 1 is
+```{r pred1, echo=FALSE}
+predictwins <- predict(wins_lm, newdata=test, type="response")
+predictwins <- floor(predictwins)
+error <- predictwins-test$`moneyball_df$TARGET_WINS`
+predictwins <- cbind(predictwins, test$`moneyball_df$TARGET_WINS`, error)
+#head(predictwins)
+rmse <- sqrt(mean(error^2))
+rmse
+```
+
+The number of wins in a season predited by model 1 is off, on average, by 14. 
+
+####Prediction from Model 2
+The root mean square error from model 2 is
+```{r pred2, echo=FALSE}
+predictwins2 <- predict(wins_lm2, newdata=test2, type="response")
+predictwins2 <- floor(predictwins2)
+error2 <- predictwins2-test2$`moneyball_df$TARGET_WINS`
+rmse2 <- sqrt(mean(error2^2))
+rmse2
+```
+
+The number of wins in a season predited by model 2 is off, on average, by 14. 
+
+####Prediction from Model 3 - Logarithmic Model
+The root mean square error from model 3 is
+```{r pred3, echo=FALSE}
+test3 <- test
+test3[test3==0] <- 0.001
+predictwins3 <- predict(wins_lm3,newdata=test3, type="response")
+predictwins3 <- floor(predictwins3)
+error3 <- exp(predictwins3)-test3$`moneyball_df$TARGET_WINS`
+rmse3 <- sqrt(mean(error3^2))
+rmse3
+```
+
+The number of wins in a season predited by model 3 is off, on average, by 31 
+
+####Prediction from Model 4
+The root mean square error from model 4 is
+```{r pred4, echo=FALSE}
+
+
+med_base_hits <- median(moneyball_df_train$base_hits, na.rm=T)
+med_doubles_hit <- median(moneyball_df_train$doubles_hit, na.rm=T)
+med_triples_hit <- median(moneyball_df_train$triples_hit, na.rm=T)
+med_walks_by_batters <- median(moneyball_df_train$walks_by_batters, na.rm=T)
+med_stolen_bases <- median(moneyball_df_train$stolen_bases, na.rm=T)
+med_caught_stealing_bases <- median(moneyball_df_train$caught_stealing_bases, na.rm=T)
+med_batters_hit_by_pitch <- median(moneyball_df_wins_removed$batters_hit_by_pitch, na.rm=T)
+med_hits_allowed <- median(moneyball_df_train$hits_allowed, na.rm=T)
+med_walks_allowed <- median(moneyball_df_train$walks_allowed, na.rm=T)
+med_errors <- median(moneyball_df_train$errors, na.rm=T)
+med_double_plays <- median(moneyball_df_train$double_plays, na.rm=T)
+med_homeruns <- median(moneyball_df_train$homeruns, na.rm=T)
+med_strikeouts <- median(moneyball_df_train$strikeouts, na.rm=T)
+
+
+test4$base_hits[is.na(test4$base_hits)] <- med_base_hits
+test4$doubles_hit[is.na(test4$doubles_hit)] <- med_doubles_hit
+test4$triples_hit[is.na(test4$triples_hit)] <- med_triples_hit
+test4$walks_by_batters[is.na(test4$walks_by_batters)] <- med_walks_by_batters
+test4$stolen_bases[is.na(test4$stolen_bases)] <- med_stolen_bases
+test4$caught_stealing_bases[is.na(test4$caught_stealing_bases)] <- med_caught_stealing_bases
+test4$batters_hit_by_pitch[is.na(test4$batters_hit_by_pitch)] <- med_batters_hit_by_pitch
+test4$hits_allowed[is.na(test4$hits_allowed)] <- med_hits_allowed
+test4$errors[is.na(test4$errors)] <- med_errors
+test4$double_plays[is.na(test4$double_plays)] <- med_double_plays
+test4$homeruns[is.na(test4$homeruns)] <- med_homeruns
+test4$strikeouts[is.na(test4$strikeouts)] <- med_strikeouts
+
+predictwins4 <- predict(wins_lm4, newdata=test4, type="response")
+predictwins4 <- floor(predictwins4)
+error4 <- predictwins4-test4$`moneyball_df$TARGET_WINS`
+rmse4 <- sqrt(mean(error4^2))
+rmse4
+```
+
+The number of wins in a season predited by model 4 is off, on average, by 27. 
+
+##PREDICTING WINS in the EVALUATION DATA
+The model I will use to predict values in the evaluation set is model 1. \n\
+Although model 4 had a higher adjusted R squared value, it used so few cases to build the model due to the number of missing values, that the root mean square error was significantly higher.
+I expect that models 1 and 2 will predict values in a similar manner, but model 1 has a slightly lower root mean square error.  Model 3, the logarithmic model had the highest root mean square error and is not an appropriate choice. \n\
+
+The following steps are taken to prepare the evaluation set to make predictions: \n\
+The column titles are changed.  Outliers above the chosen values in the evaluation set in hits allowed, errors and strikeouts by pitchers are set to NA.  Homeruns allowed and homeruns hit are added.  Strikeouts at bat and strikeouts by pitchers are added.  The NA values are changed to the median values from the training set.
+
+The number of wins is stored in predictwins_eval.
+
+```{r moneyball_evaluation, echo=FALSE}
+moneyball_eval_names <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/moneyball-evaluation-data.csv", stringsAsFactors = FALSE)
+colnames(moneyball_eval_names) <-c("Index", "base_hits","doubles_hit","triples_hit","homeruns_hit","walks_by_batters","strikeouts_at_bat","stolen_bases","caught_stealing_bases","batters_hit_by_pitch","hits_allowed","homeruns_allowed","walks_allowed","strikeouts_by_pitchers","errors","double_plays")
+
+moneyball_eval_names$hits_allowed[moneyball_eval_names$hits_allowed > 5000] <- NA
+moneyball_eval_names$errors[moneyball_eval_names$errors > 1000] <- NA
+moneyball_eval_names$strikeouts_by_pitchers[moneyball_eval_names$strikeouts_by_pitchers > 3000] <- NA
+summary(moneyball_eval_names)
+
+moneyball_eval_names <- moneyball_eval_names %>%
+  mutate(homeruns = homeruns_hit+homeruns_allowed) %>%
+  mutate(strikeouts = strikeouts_at_bat+strikeouts_by_pitchers) 
+  
+moneyball_eval_names <- select(moneyball_eval_names, -c(homeruns_hit,homeruns_allowed, strikeouts_at_bat, strikeouts_by_pitchers))
+
+moneyball_eval_names$base_hits[is.na(moneyball_eval_names$base_hits)] <- med_base_hits
+moneyball_eval_names$doubles_hit[is.na(moneyball_eval_names$doubles_hit)] <- med_doubles_hit
+moneyball_eval_names$triples_hit[is.na(moneyball_eval_names$triples_hit)] <- med_triples_hit
+moneyball_eval_names$walks_by_batters[is.na(moneyball_eval_names$walks_by_batters)] <- med_walks_by_batters
+moneyball_eval_names$stolen_bases[is.na(moneyball_eval_names$stolen_bases)] <- med_stolen_bases
+moneyball_eval_names$caught_stealing_bases[is.na(moneyball_eval_names$caught_stealing_bases)] <- med_caught_stealing_bases
+moneyball_eval_names$batters_hit_by_pitch[is.na(moneyball_eval_names$batters_hit_by_pitch)] <- med_batters_hit_by_pitch
+moneyball_eval_names$hits_allowed[is.na(moneyball_eval_names$hits_allowed)] <- med_hits_allowed
+moneyball_eval_names$errors[is.na(moneyball_eval_names$errors)] <- med_errors
+moneyball_eval_names$double_plays[is.na(moneyball_eval_names$double_plays)] <- med_double_plays
+moneyball_eval_names$homeruns[is.na(moneyball_eval_names$homeruns)] <- med_homeruns
+moneyball_eval_names$strikeouts[is.na(moneyball_eval_names$strikeouts)] <- med_strikeouts
+
+
+predictwins_eval <- predict(wins_lm, newdata=moneyball_eval_names, type="response")
+predictwins_eval <- floor(predictwins_eval)
+predictwins_eval
+```
+
+
+##APPENDIX
+
+
+moneyball_df <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/moneyball-training-data.csv", stringsAsFactors = FALSE)
+#nrow(moneyball_df)
+moneyball_df <- moneyball_df[-1]
+
+moneyball_df_wins_removed <- moneyball_df[-1]
+colnames(moneyball_df_wins_removed) <-c("base_hits","doubles_hit","triples_hit","homeruns_hit","walks_by_batters","strikeouts_at_bat","stolen_bases","caught_stealing_bases","batters_hit_by_pitch","hits_allowed","homeruns_allowed","walks_allowed","strikeouts_by_pitchers","errors","double_plays")
+summary(moneyball_df_wins_removed)
+
+plot(moneyball_df_wins_removed$hits_allowed, ylab="number of hits allowed", main="Hits Allowed In 1 Season")
+hist(moneyball_df_wins_removed$hits_allowed, xlab="number hits allowed",main="Hits Allowed In 1 Season")
+boxplot(moneyball_df_wins_removed$hits_allowed, main="Hits Allowed In 1 Season")
+
+plot(moneyball_df_wins_removed$errors, ylab="number of errors", main="Number of Errors In 1 Season")
+hist(moneyball_df_wins_removed$errors, xlab="number of errors",main="Number of Errors In 1 Season")
+boxplot(moneyball_df_wins_removed$errors, main="Number of Errors In 1 Season")
+
+plot(moneyball_df_wins_removed$strikeouts_by_pitchers, ylab="number of strikeouts by pitchers", main="Strikeouts By Pitchers In 1 Season")
+hist(moneyball_df_wins_removed$strikeouts_by_pitchers, xlab="number of strikeouts by pitchers",main="Strikeouts By Pitchers In 1 Season")
+boxplot(moneyball_df_wins_removed$strikeouts_by_pitchers, main="Strikeouts By Pitchers In 1 Season")
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+par(mar = c(2, 5, 4, 2)+ 0.1)
+par(cex.axis=.6)
+boxplot(moneyball_df_wins_removed, las=2,horizontal=TRUE, ylim=c(0,3000))
+
+par(mar = c(2, 5, 4, 2)+ 0.1)
+par(cex.axis=.5)
+image(is.na(moneyball_df_wins_removed), axes=FALSE,col=gray(1:0), main='Missing Data')
+axis(2, at=0:14/14, labels=colnames(moneyball_df_wins_removed),las=2)
+axis(1, at=0:2275/2275, labels=FALSE)
+
+moneyball_df_wins_removed$hits_allowed[moneyball_df_wins_removed$hits_allowed > 5000] <- NA
+plot(moneyball_df_wins_removed$hits_allowed, ylab="number of hits allowed", main="Hits Allowed In 1 Season")
+hist(moneyball_df_wins_removed$hits_allowed, xlab="number hits allowed",main="Hits Allowed In 1 Season")
+boxplot(moneyball_df_wins_removed$hits_allowed, main="Hits Allowed In 1 Season")
+
+moneyball_df_wins_removed$errors[moneyball_df_wins_removed$errors > 1000] <- NA
+plot(moneyball_df_wins_removed$errors, ylab="number of errors", main="Number of Errors In 1 Season")
+hist(moneyball_df_wins_removed$errors, xlab="number of errors",main="Number of Errors In 1 Season")
+boxplot(moneyball_df_wins_removed$errors, main="Number of Errors In 1 Season")
+
+moneyball_df_wins_removed$strikeouts_by_pitchers[moneyball_df_wins_removed$strikeouts_by_pitchers > 3000] <- NA
+plot(moneyball_df_wins_removed$strikeouts_by_pitchers, ylab="number of strikeouts by pitchers", main="Strikeouts By Pitchers In 1 Season")
+hist(moneyball_df_wins_removed$strikeouts_by_pitchers, xlab="number of strikeouts by pitchers",main="Strikeouts By Pitchers In 1 Season")
+boxplot(moneyball_df_wins_removed$strikeouts_by_pitchers, main="Strikeouts By Pitchers In 1 Season")
+
+moneyball_df_train <- subset(moneyball_df_wins_removed, select=-(batters_hit_by_pitch))
+
+moneyball_df_train$strikeouts_at_bat[is.na(moneyball_df_train$strikeouts_at_bat)] <- median(moneyball_df_train$strikeouts_at_bat, na.rm=T)
+
+moneyball_df_train$caught_stealing_bases[is.na(moneyball_df_train$caught_stealing_bases)] <- median(moneyball_df_train$caught_stealing_bases, na.rm=T)
+
+moneyball_df_train$stolen_bases[is.na(moneyball_df_train$stolen_bases)] <- median(moneyball_df_train$stolen_bases, na.rm=T)
+
+moneyball_df_train$double_plays[is.na(moneyball_df_train$double_plays)] <- median(moneyball_df_train$double_plays, na.rm=T)
+
+moneyball_df_train$hits_allowed[is.na(moneyball_df_train$hits_allowed)] <- median(moneyball_df_train$hits_allowed, na.rm=T)
+
+moneyball_df_train$strikeouts_by_pitchers[is.na(moneyball_df_train$strikeouts_by_pitchers)] <- median(moneyball_df_train$strikeouts_by_pitchers, na.rm=T)
+
+moneyball_df_train$errors[is.na(moneyball_df_train$errors)] <- median(moneyball_df_train$errors, na.rm=T)
+
+correlation <- cor(moneyball_df_train, method = "pearson")
+correlation
+
+
+library(dplyr)
+moneyball_df_train <- moneyball_df_train %>%
+  mutate(homeruns = homeruns_hit+homeruns_allowed) %>%
+  mutate(strikeouts = strikeouts_at_bat+strikeouts_by_pitchers) 
+  
+moneyball_df_train <- select(moneyball_df_train, -c(homeruns_hit,homeruns_allowed, strikeouts_at_bat, strikeouts_by_pitchers))
+
+n <- nrow(moneyball_df_train)
+moneyball_df_train <- cbind(moneyball_df_train, moneyball_df$TARGET_WINS)
+shuffle_df <- moneyball_df_train[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train <- shuffle_df[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test <- shuffle_df[test_indeces,]
+
+wins_lm <- lm(`moneyball_df$TARGET_WINS` ~ ., data=train)
+summary(wins_lm)
+
+wins_lm <- update(wins_lm, .~. -strikeouts, data = train)
+summary(wins_lm)
+
+
+wins_lm <- update(wins_lm, .~. -caught_stealing_bases, data = train)
+summary(wins_lm)
+
+wins_lm <- update(wins_lm, .~. -errors, data = train)
+summary(wins_lm)
+
+plot(fitted(wins_lm),resid(wins_lm))
+qqnorm(resid(wins_lm))
+qqline(resid(wins_lm))
+
+shuffle_df2 <- moneyball_df_train[sample(n),]
+train_indeces2 <- 1:round(0.6*n)
+train2 <- shuffle_df2[train_indeces2,]
+test_indeces2 <- (round(.6*n)+1):n
+test2 <- shuffle_df2[test_indeces2,]
+
+wins_lm2 <- lm(`moneyball_df$TARGET_WINS` ~ ., data=train2)
+summary(wins_lm2)
+ 
+
+wins_lm2 <- update(wins_lm2, .~. -strikeouts, data = train2)
+summary(wins_lm2)
+```
+
+wins_lm2 <- update(wins_lm2, .~. -caught_stealing_bases, data = train2)
+summary(wins_lm2)
+
+wins_lm2 <- update(wins_lm2, .~. -doubles_hit, data = train2)
+summary(wins_lm2)
+
+plot(fitted(wins_lm2),resid(wins_lm2))
+qqnorm(resid(wins_lm2))
+qqline(resid(wins_lm2))
+
+train3 <- train
+train3[train3==0] <- 0.001
+wins_lm3 <- lm(log(`moneyball_df$TARGET_WINS`) ~ ., data=train3)
+summary(wins_lm3)
+
+wins_lm3 <- update(wins_lm3, .~. -hits_allowed, data = train3)
+summary(wins_lm3)
+
+wins_lm3 <- update(wins_lm3, .~. -homeruns, data = train3)
+summary(wins_lm3)
+
+wins_lm3 <- update(wins_lm3, .~. -stolen_bases, data = train3)
+summary(wins_lm3)
+
+wins_lm3 <- update(wins_lm3, .~. -errors, data = train3)
+summary(wins_lm3)
+
+plot(fitted(wins_lm3),resid(wins_lm3))
+qqnorm(resid(wins_lm3))
+qqline(resid(wins_lm3))
+
+moneyball_df_train4 <- moneyball_df_wins_removed %>%
+  mutate(homeruns = homeruns_hit+homeruns_allowed) %>%
+  mutate(strikeouts = strikeouts_at_bat+strikeouts_by_pitchers) 
+moneyball_df_train4 <- cbind(moneyball_df_train4, moneyball_df$TARGET_WINS)
+  
+moneyball_df_train4 <- select(moneyball_df_train4, -c(homeruns_hit,homeruns_allowed, strikeouts_at_bat, strikeouts_by_pitchers))
+shuffle_df4 <- moneyball_df_train4[sample(n),]
+train_indeces4 <- 1:round(0.6*n)
+train4 <- shuffle_df4[train_indeces4,]
+test_indeces4 <- (round(.6*n)+1):n
+test4 <- shuffle_df4[test_indeces4,]
+
+wins_lm4 <- lm(`moneyball_df$TARGET_WINS` ~ ., data=train4)
+summary(wins_lm4)
+
+wins_lm4 <- update(wins_lm4, .~. -stolen_bases, data = train4)
+summary(wins_lm4)
+
+wins_lm4 <- update(wins_lm4, .~. -caught_stealing_bases, data = train4)
+summary(wins_lm4)
+
+wins_lm4 <- update(wins_lm4, .~. -triples_hit, data = train4)
+summary(wins_lm4)
+
+wins_lm4 <- update(wins_lm4, .~. -hits_allowed, data = train4)
+summary(wins_lm4)
+
+wins_lm4 <- update(wins_lm4, .~. -walks_by_batters, data = train4)
+
+wins_lm4 <- update(wins_lm4, .~. -base_hits, data = train4)
+summary(wins_lm4)
+
+
+plot(fitted(wins_lm4),resid(wins_lm4))
+qqnorm(resid(wins_lm4))
+qqline(resid(wins_lm4))
+
+predictwins <- predict(wins_lm, newdata=test, type="response")
+predictwins <- floor(predictwins)
+error <- predictwins-test$`moneyball_df$TARGET_WINS`
+predictwins <- cbind(predictwins, test$`moneyball_df$TARGET_WINS`, error)
+#head(predictwins)
+rmse <- sqrt(mean(error^2))
+rmse
+
+predictwins2 <- predict(wins_lm2, newdata=test2, type="response")
+predictwins2 <- floor(predictwins2)
+error2 <- predictwins2-test2$`moneyball_df$TARGET_WINS`
+rmse2 <- sqrt(mean(error2^2))
+rmse2
+
+test3 <- test
+test3[test3==0] <- 0.001
+predictwins3 <- predict(wins_lm3,newdata=test3, type="response")
+predictwins3 <- floor(predictwins3)
+error3 <- exp(predictwins3)-test3$`moneyball_df$TARGET_WINS`
+rmse3 <- sqrt(mean(error3^2))
+rmse3
+
+med_base_hits <- median(moneyball_df_train$base_hits, na.rm=T)
+med_doubles_hit <- median(moneyball_df_train$doubles_hit, na.rm=T)
+med_triples_hit <- median(moneyball_df_train$triples_hit, na.rm=T)
+med_walks_by_batters <- median(moneyball_df_train$walks_by_batters, na.rm=T)
+med_stolen_bases <- median(moneyball_df_train$stolen_bases, na.rm=T)
+med_caught_stealing_bases <- median(moneyball_df_train$caught_stealing_bases, na.rm=T)
+med_batters_hit_by_pitch <- median(moneyball_df_wins_removed$batters_hit_by_pitch, na.rm=T)
+med_hits_allowed <- median(moneyball_df_train$hits_allowed, na.rm=T)
+med_walks_allowed <- median(moneyball_df_train$walks_allowed, na.rm=T)
+med_errors <- median(moneyball_df_train$errors, na.rm=T)
+med_double_plays <- median(moneyball_df_train$double_plays, na.rm=T)
+med_homeruns <- median(moneyball_df_train$homeruns, na.rm=T)
+med_strikeouts <- median(moneyball_df_train$strikeouts, na.rm=T)
+
+
+test4$base_hits[is.na(test4$base_hits)] <- med_base_hits
+test4$doubles_hit[is.na(test4$doubles_hit)] <- med_doubles_hit
+test4$triples_hit[is.na(test4$triples_hit)] <- med_triples_hit
+test4$walks_by_batters[is.na(test4$walks_by_batters)] <- med_walks_by_batters
+test4$stolen_bases[is.na(test4$stolen_bases)] <- med_stolen_bases
+test4$caught_stealing_bases[is.na(test4$caught_stealing_bases)] <- med_caught_stealing_bases
+test4$batters_hit_by_pitch[is.na(test4$batters_hit_by_pitch)] <- med_batters_hit_by_pitch
+test4$hits_allowed[is.na(test4$hits_allowed)] <- med_hits_allowed
+test4$errors[is.na(test4$errors)] <- med_errors
+test4$double_plays[is.na(test4$double_plays)] <- med_double_plays
+test4$homeruns[is.na(test4$homeruns)] <- med_homeruns
+test4$strikeouts[is.na(test4$strikeouts)] <- med_strikeouts
+
+predictwins4 <- predict(wins_lm4, newdata=test4, type="response")
+predictwins4 <- floor(predictwins4)
+error4 <- predictwins4-test4$`moneyball_df$TARGET_WINS`
+rmse4 <- sqrt(mean(error4^2))
+
+
+moneyball_eval_names <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/moneyball-evaluation-data.csv", stringsAsFactors = FALSE)
+colnames(moneyball_eval_names) <-c("Index", "base_hits","doubles_hit","triples_hit","homeruns_hit","walks_by_batters","strikeouts_at_bat","stolen_bases","caught_stealing_bases","batters_hit_by_pitch","hits_allowed","homeruns_allowed","walks_allowed","strikeouts_by_pitchers","errors","double_plays")
+
+moneyball_eval_names$hits_allowed[moneyball_eval_names$hits_allowed > 5000] <- NA
+moneyball_eval_names$errors[moneyball_eval_names$errors > 1000] <- NA
+moneyball_eval_names$strikeouts_by_pitchers[moneyball_eval_names$strikeouts_by_pitchers > 3000] <- NA
+summary(moneyball_eval_names)
+
+moneyball_eval_names <- moneyball_eval_names %>%
+  mutate(homeruns = homeruns_hit+homeruns_allowed) %>%
+  mutate(strikeouts = strikeouts_at_bat+strikeouts_by_pitchers) 
+  
+moneyball_eval_names <- select(moneyball_eval_names, -c(homeruns_hit,homeruns_allowed, strikeouts_at_bat, strikeouts_by_pitchers))
+
+moneyball_eval_names$base_hits[is.na(moneyball_eval_names$base_hits)] <- med_base_hits
+moneyball_eval_names$doubles_hit[is.na(moneyball_eval_names$doubles_hit)] <- med_doubles_hit
+moneyball_eval_names$triples_hit[is.na(moneyball_eval_names$triples_hit)] <- med_triples_hit
+moneyball_eval_names$walks_by_batters[is.na(moneyball_eval_names$walks_by_batters)] <- med_walks_by_batters
+moneyball_eval_names$stolen_bases[is.na(moneyball_eval_names$stolen_bases)] <- med_stolen_bases
+moneyball_eval_names$caught_stealing_bases[is.na(moneyball_eval_names$caught_stealing_bases)] <- med_caught_stealing_bases
+moneyball_eval_names$batters_hit_by_pitch[is.na(moneyball_eval_names$batters_hit_by_pitch)] <- med_batters_hit_by_pitch
+moneyball_eval_names$hits_allowed[is.na(moneyball_eval_names$hits_allowed)] <- med_hits_allowed
+moneyball_eval_names$errors[is.na(moneyball_eval_names$errors)] <- med_errors
+moneyball_eval_names$double_plays[is.na(moneyball_eval_names$double_plays)] <- med_double_plays
+moneyball_eval_names$homeruns[is.na(moneyball_eval_names$homeruns)] <- med_homeruns
+moneyball_eval_names$strikeouts[is.na(moneyball_eval_names$strikeouts)] <- med_strikeouts
+
+
+predictwins_eval <- predict(wins_lm, newdata=moneyball_eval_names, type="response")
+predictwins_eval <- floor(predictwins_eval)
+predictwins_eval
+
+
+
+
+
+
+
