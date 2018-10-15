@@ -1,0 +1,306 @@
+---
+title: "DATA 621 - HW 2 - Classification Metrics"
+author: "Sarah Wigodsky"
+date: "October 9, 2018"
+output: html_document
+---
+
+The data below is used to create and analyze a confusion matrix and create an ROC curve.
+
+```{r setup, echo=FALSE}
+df <- read.csv('https://raw.githubusercontent.com/swigodsky/Data621/master/classification_output_data.csv')
+head(df)
+```
+###Confusion Matrix
+```{r confusion_matrix, echo=FALSE}
+table(df$scored.class,df$class)
+```
+
+The rows represent the prediction model's values.\n\
+The columns represent the (actual) target's values. \n\
+\n\
+The model predicted 119 0's that were actually 0.  The model predicted 30 0's that were actually 1. \n\
+The model predicted 5 1's that were actaully 0.  The model predicted 27 1's that were actually 1. \n\
+I am considering 0 to be positive and 1 to be negative.
+
+###Accuracy
+The accuracy is the ratio of the correct predictions to the total predicitons. 
+```{r accuracy, echo=FALSE}
+acc <- function(df){
+  totalnum <- length(df$scored.class) 
+  numRight <- length(which(df$scored.class==df$class))
+  accuracy <- numRight/totalnum
+  return(accuracy)
+} 
+accuracy <- acc(df)
+print(accuracy)
+```
+
+###Classification Error Rate
+The error rate is the ratio of the incorrect predictions to the total predicitons. 
+```{r error, echo=FALSE}
+err <- function(df){
+  totalnum <- length(df$scored.class) 
+  numWrong <- length(which(df$scored.class!=df$class))
+  error <- numWrong/totalnum
+  return(error)
+} 
+error <- err(df)
+print(error)
+```
+
+The total of the accuracy and error adds to 1.
+```{r total, echo=FALSE}
+print(accuracy+error)
+```
+
+###Precision
+The precision is the ratio of the true positives (predicted 0 values that were 0 values) to the total positives (all zero values that were predicted). 
+```{r precision, echo=FALSE}
+prec <- function(df){
+  true_pos <- length(which((df$scored.class==0)&(df$class==0)))
+  all_pos <- length(which(df$class==0)) + length(which(df$scored.class==0))
+  precision <- true_pos/all_pos
+  return(precision)
+} 
+precision <- prec(df)
+print(precision)
+```
+
+###Sensitivity
+The sensitivity is the ratio of the true positives (values predicted to be 0 that were 0) to the true positives plus false negatives (target value is zero). 
+```{r sensitivity, echo=FALSE}
+sens <- function(df){
+  true_pos <- length(which((df$scored.class==0)&(df$class==0)))
+  false_neg <- length(which((df$scored.class==1)&(df$class==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  return(sensitivity)
+} 
+sensitivity <- sens(df)
+print(sensitivity)
+```
+
+###Specificity
+The specificity is the ratio of the true negatives (predicted and target values are 1) to the true negatives plus false positives (predicted value is 0 and target value is 1). 
+```{r specificity, echo=FALSE}
+spec <- function(df){
+  true_neg <- length(which((df$scored.class==1)&(df$class==1)))
+  false_pos <- length(which((df$scored.class==0)&(df$class==1)))
+  sensitivity <- true_neg/(true_neg+false_pos)
+  return(sensitivity)
+} 
+specificity <- spec(df)
+print(specificity)
+```
+
+
+###F1 Score
+The F1 score is equal to 2xPrecisionxSensitive/(Precision+Sensitivity)
+```{r F1, echo=FALSE}
+f1 <- function(df){
+  true_pos <- length(which((df$scored.class==0)&(df$class==0)))
+  all_pos <- length(which(df$class==0)) + length(which(df$scored.class==0))
+  precision <- true_pos/all_pos
+  
+  false_neg <- length(which((df$scored.class==1)&(df$class==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  
+  f1 <- 2*precision*sensitivity/(precision+sensitivity)
+  return(f1)
+} 
+f1 <- f1(df)
+print(f1)
+```
+
+###Bounds of F1 Score
+If all of the predictions are correct, then there are only true positives and true negatives.  In that case, the precision will equal 1 and the sensitivity will equal 1.  The F1 score would then equal 1.  That is the maximum boundary of the F1 score. \n\
+\n\
+The other extreme is if there are no true positives.  In that case the precision will equal 0.  The F1 score in that case is zero.
+\n\
+The F1 score will be undefined if there are no true negatives and no true positives because then the sensitivity will be zero and the precision will be zero so the F1 score will be 0/0.
+
+###ROC(Receiver Operating Characteristic) Curve
+The ROC curve is a plot of true positive rate (sensitivity) vs. false positive rate (1-specificity).  It is created by changing the cut-off.  The cut-off is the threshold, such that probabilities below that result in the prediction being 0, and above that result in the prediction being 1.
+```{r ROC, echo=FALSE, warnings=FALSE, messages=FALSE}
+library(ggplot2)
+roc <- function(df){
+  roc_tester <- data.frame(o_m_specificity=NA, sensitivity=NA)[numeric(0), ]
+  auc=0
+  for (cutoff in seq(0,1.0,0.01)){
+    test_df <- df #make a copy of df
+    #set scored (predicted) values in test_df according to whether the probability is above or below the cut-off threshold
+    test_df$scored.class[test_df$scored.probability < cutoff] <- 0
+    test_df$scored.class[test_df$scored.probability >= cutoff] <- 1
+
+    spec_val <- spec(test_df)
+    sens_val <- sens(test_df)
+      
+    roc_tester <- rbind(roc_tester, list(o_m_specificity=1-spec_val,sensitivity= sens_val))
+  
+    #calculating area of trapezoid for each set of data points  
+    if (cutoff>=0.1){
+      num_values = nrow(roc_tester)
+      base2 = roc_tester$sensitivity[num_values]
+      base1 = roc_tester$sensitivity[num_values-1]
+      height2 = roc_tester$o_m_specificity[num_values]
+      height1 = roc_tester$o_m_specificity[num_values-1]
+      area = .5*(base1+base2)*(height2-height1)
+      auc = auc + area
+    }
+  }
+
+    roc_plot <- ggplot(roc_tester, aes(x = o_m_specificity, y = sensitivity)) + geom_point() + labs(x="False Positive Rate (1-specificity)", y="True Positive Rate (sensitivity)", title="ROC Curve" )
+      
+  return(list(roc_plot=roc_plot, auc_val=auc))
+}
+
+roc_vals <-  roc(df)
+roc_vals$roc_plot
+```
+
+The area under the curve is `r roc_vals$auc_val`.
+
+###Caret Package
+```{r caret-package, echo=FALSE, message=FALSE, warning=FALSE}
+library(caret)
+library(e1071)
+values<- factor(df$class)
+pred <- factor(df$scored.class)
+confusionMatrix(pred,values)
+```
+
+The caret package yielded the same confusion matrix, sensitivity and specificity value that I found above.
+
+```{r pROC, echo=FALSE, message=FALSE, warning=FALSE}
+library(pROC)
+pROC::roc(df$class, df$scored.probability)
+plot.roc(df$class, df$scored.probability, main="ROC Curve Using pROC Package")
+```
+
+The ROC curve from the pROC package produces a curve of the same shape as the ROC curve created above.  The value of the area under the curve calculated from the pROC method is 0.8503.  This is approximately equal to the area I calculated using the trapezoid method, which was 0.8489.
+
+###Appendix---
+
+df <- read.csv('https://raw.githubusercontent.com/swigodsky/Data621/master/classification_output_data.csv')
+head(df)
+
+#Confusion Matrix
+table(df$scored.class,df$class)
+
+#Accuracy
+acc <- function(df){
+  totalnum <- length(df$scored.class) 
+  numRight <- length(which(df$scored.class==df$class))
+  accuracy <- numRight/totalnum
+  return(accuracy)
+} 
+accuracy <- acc(df)
+print(accuracy)
+
+#Classification Error Rate
+err <- function(df){
+  totalnum <- length(df$scored.class) 
+  numWrong <- length(which(df$scored.class!=df$class))
+  error <- numWrong/totalnum
+  return(error)
+} 
+error <- err(df)
+print(error)
+
+print(accuracy+error)
+
+#Precision
+prec <- function(df){
+  true_pos <- length(which((df$scored.class==0)&(df$class==0)))
+  all_pos <- length(which(df$class==0)) + length(which(df$scored.class==0))
+  precision <- true_pos/all_pos
+  return(precision)
+} 
+precision <- prec(df)
+print(precision)
+
+#Sensitivity
+sens <- function(df){
+  true_pos <- length(which((df$scored.class==0)&(df$class==0)))
+  false_neg <- length(which((df$scored.class==1)&(df$class==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  return(sensitivity)
+} 
+sensitivity <- sens(df)
+print(sensitivity)
+
+#Specificity
+spec <- function(df){
+  true_neg <- length(which((df$scored.class==1)&(df$class==1)))
+  false_pos <- length(which((df$scored.class==0)&(df$class==1)))
+  sensitivity <- true_neg/(true_neg+false_pos)
+  return(sensitivity)
+} 
+specificity <- spec(df)
+print(specificity)
+
+#F1 Score
+f1 <- function(df){
+  true_pos <- length(which((df$scored.class==0)&(df$class==0)))
+  all_pos <- length(which(df$class==0)) + length(which(df$scored.class==0))
+  precision <- true_pos/all_pos
+  
+  false_neg <- length(which((df$scored.class==1)&(df$class==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  
+  f1 <- 2*precision*sensitivity/(precision+sensitivity)
+  return(f1)
+} 
+f1 <- f1(df)
+print(f1)
+
+#ROC(Receiver Operating Characteristic) Curve
+library(ggplot2)
+roc <- function(df){
+  roc_tester <- data.frame(o_m_specificity=NA, sensitivity=NA)[numeric(0), ]
+  auc=0
+  for (cutoff in seq(0,1.0,0.01)){
+    test_df <- df #make a copy of df
+    #set scored (predicted) values in test_df according to whether the probability is above or below the cut-off threshold
+    test_df$scored.class[test_df$scored.probability < cutoff] <- 0
+    test_df$scored.class[test_df$scored.probability >= cutoff] <- 1
+
+    spec_val <- spec(test_df)
+    sens_val <- sens(test_df)
+      
+    roc_tester <- rbind(roc_tester, list(o_m_specificity=1-spec_val,sensitivity= sens_val))
+  
+    #calculating area of trapezoid for each set of data points  
+    if (cutoff>=0.1){
+      num_values = nrow(roc_tester)
+      base2 = roc_tester$sensitivity[num_values]
+      base1 = roc_tester$sensitivity[num_values-1]
+      height2 = roc_tester$o_m_specificity[num_values]
+      height1 = roc_tester$o_m_specificity[num_values-1]
+      area = .5*(base1+base2)*(height2-height1)
+      auc = auc + area
+    }
+  }
+
+    roc_plot <- ggplot(roc_tester, aes(x = o_m_specificity, y = sensitivity)) + geom_point() + labs(x="False Positive Rate (1-specificity)", y="True Positive Rate (sensitivity)", title="ROC Curve" )
+      
+  return(list(roc_plot=roc_plot, auc_val=auc))
+}
+
+roc_vals <-  roc(df)
+roc_vals$roc_plot
+
+The area under the curve is `r roc_vals$auc_val`.
+
+#Caret Package
+library(caret)
+library(e1071)
+values<- factor(df$class)
+pred <- factor(df$scored.class)
+confusionMatrix(pred,values)
+
+library(pROC)
+pROC::roc(df$class, df$scored.probability)
+plot.roc(df$class, df$scored.probability, main="ROC Curve Using pROC Package")
+
+
