@@ -1,0 +1,571 @@
+---
+title: "DATA 621 HW3"
+author: "Sarah Wigodsky"
+date: "October 23, 2018"
+output: html_document
+---
+
+
+##DATA EXPLORATION
+
+```{r load_data, echo=FALSE}
+crime <- read.csv("C:/Users/Swigo/Desktop/Sarah/DATA_621_linear_regression_withR/crime-training-data.csv", stringsAsFactors = FALSE)
+head(crime)
+nrow(crime)
+```
+
+The data set includes statistics from a neighborhoods near Boston to predict whether the crime rate is above or below the median crime rate. There are 466 records.  Each record constitutes data from a neighborhood. 
+
+The following is a list of the variables that will be used to build a binary logistic regression model to predict whether the crime rate is above the median (1) or below the median (0):
+
+  - zn: proportion of residential land zoned for large lots (over 25000 square feet)
+  - indus: proportion of non-retail business acres per suburb 
+  - chas: a dummy var. for whether the suburb borders the Charles River
+  -??? nox: nitrogen oxides concentration (parts per 10 million) ???
+  - rm: average number of rooms per dwelling 
+  - age: proportion of owner-occupied units built prior to 1940
+  - dis: weighted mean of distances to five Boston employment centers
+  - rad: index of accessibility to radial highways 
+  - tax: full-value property-tax rate per 10,000 dollars
+  - ptratio: pupil-teacher ratio by town 
+  - black: 1000(Bk - 0.63)^2 where Bk is the proportion of black people by town 
+  - lstat: percent of lower status of the population ???
+  - medv: median value of owner-occupied homes in 1000s of dollars 
+  
+The following are sumamry statistics for each of the variables described above:
+```{r summary_statistics, echo=FALSE}
+crime_target_removed <- crime[-14]
+summary(crime_target_removed)
+```
+
+
+There is no missing data from the data set.  
+
+####zn - Proportion of Residential Land Zoned For Large Lots
+This proportion ranges from 0 to 100.  What is striking is that the median value is zero and the average is 11.58.  This suggests that the data is skewed to the right.  Proportions of land zoned for large lots greater than 40% are outliers.
+
+```{r zone, echo=FALSE}
+plot(crime$zn, ylab="Proportion of Residential Land Zoned For Large Lots", main="Residential Land Zoned For Large Lots")
+hist(crime$zn, xlab="Proportion of Residential Land Zoned For Large Lots",main="Residential Land Zoned For Large Lots")
+boxplot(crime$zn, main="Residential Land Zoned For Large Lots")
+```
+
+
+
+####rad - Index of Accessibility to Radial Highways
+The mean for the index of accessibility to radial highways is almost double the median value.  
+
+```{r highways, echo=FALSE}
+plot(crime$rad, ylab="Index of Accessibility to Radial Highways", main="Accessibility to Radial Highways")
+hist(crime$rad, xlab="Index of Accessibility to Radial Highways",main="Accessibility to Radial Highways")
+boxplot(crime$rad, main="Index of Accessibility to Radial Highways")
+```
+
+The histogram shows that while most of the values are between 2 and 5, there are no values between 7 and 22 and then there is a spike near 24.  The neighborhoods are either fairly inaccessible to radial highways or very accessible to radial highways. 
+
+####tax: Full-Value Property-Tax Rate per $10,000
+The mean full value property tax rate is larger than the median value.  
+
+```{r tax, echo=FALSE}
+plot(crime$tax, ylab="Full-Value Property-Tax Rate per $10,000", main="Full-Value Property-Tax Rate")
+hist(crime$tax, xlab="Full-Value Property-Tax Rate per $10,000",main="Full-Value Property-Tax Rate")
+boxplot(crime$tax, main="Full-Value Property-Tax Rate")
+```
+
+
+Most of the neighborhoods have full property tax rates betwen 200 and 425. There are no neighborhoods with property tax rates bewtween 500 and 625 and a spike in the number of neighborhoods with higher property tax rates, at around 675.
+
+With respect to property tax and accessibility to radial highways, there is a bifurcation between neighborhoods, in which neighborhoods fall into 2 separate categories with a large break in between. 
+
+
+####black: 1000(Bk - 0.63)^2 where Bk is the Proportion of Black People by Town
+The median proportion of black people per town is higher than the mean, indicating that the data is left skewed. 
+
+```{r black_people, echo=FALSE}
+plot(crime$black, ylab="1000(num black people - 0.63)^2", main="Proportion of Black People by Town")
+hist(crime$black, xlab="1000(num black people - 0.63)^2",main="Proportion of Black People by Town")
+boxplot(crime$black, main="Proportion of Black People by Town")
+```
+
+Most of the neighborhoods have a high proportion of black residents.  However there are many neighborhoods with very few black residents.  There is a great deal of segregation present in the suburbs of Boston.  Values of the black variable below 375 are outliers.  
+
+```{r boxplots, echo=FALSE, message = FALSE, warning=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+boxplot(crime_target_removed, las=2,horizontal=TRUE)#, ylim=c(0,3000))
+```
+
+The following variables have a number of outliers: 
+ - medv: median value of owner-occupied homes in 1000s of dollars.\n\
+Homes valued at higher amounts are outliers.
+ - lstat: lower status of the population (percent) \n\
+ There are outliers at the upper end of the range of data.
+ - black: 1000(Bk - 0.63)^2 where Bk is the proportion of black people by town \n\
+ There are outliers in communities that have few black residents.
+ - zn: proportion of residential land zoned for large lots (over 25000 square feet) \n\
+ Communities that have a proportion of lots over 40% are outliers.
+ 
+##DATA PREPARATION
+####Correlation of Variables
+The following are the correlation values between each of the variables. The closer the correlation is to 1 or -1, the more highly correlated the variables.
+```{r correlation, echo=FALSE}
+correlation <- cor(crime_target_removed, method = "pearson")
+correlation
+pairs(crime_target_removed)
+```
+
+Tax (the full value property tax rate per $10,000) and rad (index of accessibility to radial highways) have a strong positive correlation.  Communities with higher property tax rates are more accessible to radial highways.  \n\
+\n\
+There is a positive correlation between tax and indus, between indus and nox, and between medv and rm. \n\
+There is a negative correlation between dis and nox, between dis and age, between age and nox and between lstat and medv.
+\n\
+To address the correlated variables, I will use PCA (principal component analysis) to combine the correleated variables. Tax and rad will be combined.  Dis, nox and age will be combined as well.\n\
+
+For each of the variables that will undergo PCA, subtract the mean from the value.  Find the eigenvectors.  Multiply the transpose of one column of eigenvectors by the transpose of the variables that are correlated.  The original variables are then removed from the data table.
+\n\
+I am removing the data connecting black people to crime, as that is devisive and inappropriate.
+
+```{r pca, echo=FALSE}
+library(factoextra)
+crime_df <- crime
+
+tax_mean <- mean(crime$tax)
+rad_mean <- mean(crime$rad)
+crime_df$tax <- crime_df$tax-tax_mean
+crime_df$rad <- crime_df$rad-rad_mean
+tax_rad <- data.frame(list(rad=crime_df$rad, tax=crime_df$tax), stringsAsFactors = FALSE)
+pca <- prcomp(tax_rad, scale = FALSE)
+eigen <- get_eigenvalue(pca)
+tax_rad <- as.matrix(tax_rad)
+tax_rad <- t(tax_rad)
+tax_rad_pca <- pca$rotation[,1] %*% tax_rad
+tax_rad_pca <- t(tax_rad_pca)
+crime_df <- cbind(crime_df, tax_rad_pca)
+
+dis_mean <- mean(crime$dis)
+nox_mean <- mean(crime$nox)
+age_mean <- mean(crime$age)
+crime_df$dis <- crime_df$dis-dis_mean
+crime_df$nox <- crime_df$nox-nox_mean
+crime_df$age <- crime_df$age-age_mean
+dis_nox_age <- data.frame(list(dis=crime_df$dis, nox=crime_df$nox, age=crime_df$age), stringsAsFactors = FALSE)
+pca2 <- prcomp(dis_nox_age, scale = FALSE)
+eigen2 <- get_eigenvalue(pca2)
+dis_nox_age <- as.matrix(dis_nox_age)
+dis_nox_age <- t(dis_nox_age)
+dis_nox_age_pca <- pca2$rotation[,1] %*% dis_nox_age
+dis_nox_age_pca <- t(dis_nox_age_pca)
+crime_df <- cbind(crime_df, dis_nox_age_pca)
+
+crime_df <-subset(crime_df, select=-c(tax,rad,dis,nox,age, black))
+```
+
+##Build Models
+
+####Breaking the data set into a training set and a testing set
+The data is shuffled randomly. 60% of the data is in the training set and 40% of the data is in the testing set.
+
+```{r model1_training_testing, echo=FALSE, cache=TRUE}
+set.seed(13)
+n <- nrow(crime_df)
+shuffle_df <- crime_df[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train <- shuffle_df[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test <- shuffle_df[test_indeces,]
+```
+
+####Backward Elimination - Logistic Regression Model 1 - Based on combining 2 sets of variables by PCA
+A logistic regression model will be built using the backward elimination model.  A logit model is being implemented because the target is binary - crime rate is above the median (1) or below the median (0).  Initially all of the variables will be present, and then they will be removed one at a time.  The variable with the highest p value, which has the least affect on wins, will be elinimated first.  Variables will be removed until every predictor has a p value below 0.05.
+
+```{r backward-elimination1, echo=FALSE}
+
+logit1 <- glm(train$target ~ ., data=train, family=binomial (link="logit"))
+summary(logit1)
+```
+ 
+rm has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_rm, echo=FALSE}
+logit1 <- update(logit1, .~. -rm, data = train, family=binomial (link="logit"))
+summary(logit1)
+```
+
+chas has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_chas, echo=FALSE}
+logit1 <- update(logit1, .~. -chas, data = train, family=binomial (link="logit"))
+summary(logit1)
+```
+
+ptratio has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_ptratio, echo=FALSE}
+logit1 <- update(logit1, .~. -ptratio, data = train, family=binomial (link="logit"))
+summary(logit1)
+```
+
+indus has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_indus, echo=FALSE}
+logit1 <- update(logit1, .~. -indus, data = train, family=binomial (link="logit"))
+summary(logit1)
+```
+
+lstat has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_lstat, echo=FALSE}
+logit1 <- update(logit1, .~. -lstat, data = train, family=binomial (link="logit"))
+summary(logit1)
+logitscalar1 <- mean(dlogis(predict(logit1,type="link")))
+logitscalar1*coef(logit1)
+```
+
+The variables that have an affect on the target variable are zn, medv, tax/rad combined, and dis/nox/age combined.
+
+The marginal effects reflect the change in the probability the target equals 1 given a 1 unit change in the independent variable.  The marginal effect is determined at the mean for each of the independent variables.  A 1 unit increase in zn, the proportion of residential land zoned for large lots, results in a 0.5% decrease in the probability that the target equals 1.  A 1 unit increase in medv, median value of owner-occupied homes in $1000s, results in a 0.8% increase in the probability the target value will be 1. The next 2 variables are harder to have intution that links their meaning back to the variables tax, rad, dis, nox and age.  However a 1 unit increase in the combined variable of tax, full-value property-tax rate per 10,000 dollars, and rad, the index of accessibility to radial highways, results in a 0.1% decrease in the probability that the target will equal 1.  A 1 unit incerase in the combined variable, dis, weighted mean of distances to five Boston employment centers, nox, nitrogen oxides concentration (parts per 10 million), and age, proportion of owner-occupied units built prior to 1940, results in a 0.4% decrease in the probability that the target will be 1.  
+
+####Model 2 - Building a Model Without Combining Correlated Variables
+Breaking the data set into a training set and a testing set.
+The data is shuffled randomly. 60% of the data is in the training set and 40% of the data is in the testing set.
+
+```{r model2_training_testing, echo=FALSE, cache=TRUE}
+set.seed(10)
+n <- nrow(crime)
+shuffle_df2 <- crime[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train2 <- shuffle_df2[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test2 <- shuffle_df2[test_indeces,]
+```
+
+####Backward Elimination - Logistic Regression Model 2
+```{r backward-elimination2, echo=FALSE}
+logit2 <- glm(train2$target ~ ., data=train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+rm has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_rm2, echo=FALSE}
+logit2 <- update(logit2, .~. -rm, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+lstat has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_lstat2, echo=FALSE}
+logit2 <- update(logit2, .~. -lstat, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+zn has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_zn2, echo=FALSE}
+logit2 <- update(logit2, .~. -zn, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+
+indus has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_indus2, echo=FALSE}
+logit2 <- update(logit2, .~. -indus, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+dis has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_dis2, echo=FALSE}
+logit2 <- update(logit2, .~. -dis, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+medv has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_medv2, echo=FALSE}
+logit2 <- update(logit2, .~. -medv, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+age has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_age2, echo=FALSE}
+logit2 <- update(logit2, .~. -age, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+black has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_black2, echo=FALSE}
+logit2 <- update(logit2, .~. -black, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+ptratio has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_ptratio2, echo=FALSE}
+logit2 <- update(logit2, .~. -ptratio, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+tax has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_tax2, echo=FALSE}
+logit2 <- update(logit2, .~. -tax, data = train2, family=binomial (link="logit"))
+summary(logit2)
+```
+
+
+###Model 3 - Combining Correlated Variables by Adding their Values Together
+In this model, the values of rad and tax will be added to create a new variable.  The variables dis, nox and age will be added to create a new variable.
+```{r addition_model3, echo=FALSE}
+crime_df3 <- crime
+
+tax_rad2 <- crime_df3$tax + crime_df3$rad 
+crime_df3 <- cbind(crime_df3, tax_rad2)
+
+dis_nox_age2 <- crime_df3$dis + crime_df3$nox + crime_df3$age
+crime_df3 <- cbind(crime_df3, dis_nox_age2)
+
+crime_df3 <-subset(crime_df3, select=-c(tax,rad,dis,nox,age, black))
+```
+
+####Creating a Test Set and Training Set
+```{r model3_training_testing, echo=FALSE, cache=TRUE}
+set.seed(15)
+n <- nrow(crime_df3)
+shuffle_df3 <- crime_df3[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train3 <- shuffle_df3[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test3 <- shuffle_df3[test_indeces,]
+```
+
+####Backward Elimination - Logistic Regression Model 3
+```{r backward-elimination3, echo=FALSE}
+logit3 <- glm(train3$target ~ ., data=train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+rm has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_rm3, echo=FALSE}
+logit3 <- update(logit3, .~. -rm, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+ptratio has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_ptratio3, echo=FALSE}
+logit3 <- update(logit3, .~. -ptratio, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+indus has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_indus3, echo=FALSE}
+logit3 <- update(logit3, .~. -indus, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+chas has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_chas3, echo=FALSE}
+logit3 <- update(logit3, .~. -chas, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+```{r fxns, echo=FALSE}
+acc <- function(pred, test){
+  totalnum <- length(pred) 
+  numRight <- length(which(pred==test$target))
+  accuracy <- numRight/totalnum
+  return(accuracy)
+} 
+
+err <- function(pred, test){
+  totalnum <- length(pred) 
+  numWrong <- length(which(pred!=test$target))
+  error <- numWrong/totalnum
+  return(error)
+} 
+
+prec <- function(pred, test){
+  true_pos <- length(which((pred==0)&(test$target==0)))
+  all_pos <- length(which(test$target==0)) + length(which(pred==0))
+  precision <- true_pos/all_pos
+  return(precision)
+} 
+
+sens <- function(pred, test){
+  true_pos <- length(which((pred==0)&(test$target==0)))
+  false_neg <- length(which((pred==1)&(test$target==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  return(sensitivity)
+} 
+
+spec <- function(pred, test){
+  true_neg <- length(which((pred==1)&(test$target==1)))
+  false_pos <- length(which((pred==0)&(test$target==1)))
+  sensitivity <- true_neg/(true_neg+false_pos)
+  return(sensitivity)
+}
+
+f1 <- function(pred, test){
+  true_pos <- length(which((pred==0)&(test$target==0)))
+  all_pos <- length(which(test$target==0)) + length(which(pred==0))
+  precision <- true_pos/all_pos
+  
+  false_neg <- length(which((pred==1)&(test$target==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  
+  f1 <- 2*precision*sensitivity/(precision+sensitivity)
+  return(f1)
+}
+#distance function taken from https://stackoverflow.com/questions/35194048/using-r-how-to-calculate-the-distance-from-one-point-to-a-line
+dist2d <- function(a,b,c) {
+ v1 <- b - c
+ v2 <- a - b
+ m <- cbind(v1,v2)
+ d2 <- abs(det(m))/sqrt(sum(v1*v1))
+ return(d2)
+} 
+
+roc <- function(pred,test){
+  d <- 0 #set distance between point and line y=x to 0
+  roc_tester <- data.frame(o_m_specificity=NA, sensitivity=NA)[numeric(0), ]
+  auc=0
+  for (cutoff in seq(0,1.0,0.01)){
+    test_df <- pred #make a copy of the predictions
+    #set scored (predicted) values in test_df according to whether the probability is above or below the cut-off threshold
+    test_df[test_df < cutoff] <- 0
+    test_df[test_df >= cutoff] <- 1
+
+    spec_val <- spec(test_df, test)
+    sens_val <- sens(test_df, test)
+      
+    roc_tester <- rbind(roc_tester, list(o_m_specificity=1-spec_val,sensitivity= sens_val))
+  #calculating Euclidean distance between point and y=x
+    a2 <- c(1-spec_val,sens_val)
+    b2 <- c(0,0)
+    c2 <- c(1,1)
+    d2 <- dist2d(a2,b2,c2) # distance of point a from line (b,c)
+    if (d2>d){
+      d <- d2
+      cut_off_val <- cutoff
+    }
+    
+
+    #calculating area of trapezoid for each set of data points  
+    if (cutoff>=0.1){
+      num_values = nrow(roc_tester)
+      base2 = roc_tester$sensitivity[num_values]
+      base1 = roc_tester$sensitivity[num_values-1]
+      height2 = roc_tester$o_m_specificity[num_values]
+      height1 = roc_tester$o_m_specificity[num_values-1]
+      area = .5*(base1+base2)*(height2-height1)
+      auc = auc + area
+    }
+  }
+
+    roc_plot <- ggplot(roc_tester, aes(x = o_m_specificity, y = sensitivity)) + geom_point() + geom_abline(slope=1) + labs(x="False Positive Rate (1-specificity)", y="True Positive Rate (sensitivity)", title="ROC Curve" )
+      
+  return(list(roc_plot=roc_plot, auc_val=auc, cut_off_val=cut_off_val))
+}
+```
+
+###Using the Test Set To Make and Evaluate Predictions from Each of the 3 Models Built 
+####Prediction from Model 1
+
+```{r model1, echo=FALSE}
+pred_logit1 <- predict(logit1, newdata=test, type="response")
+
+roc_vals <-  roc(pred_logit1,test)
+roc_vals$roc_plot
+print(roc_vals$cut_off_val)
+```
+
+The cutoff associated with a point the maximum distance from the ROC curve is 0.33.  I will use 0.33 as the cutoff for making predictions.  A value above 0.33 will be assigned a target of one and a value below 0.33 wil be assigned a value of zero.
+\n\
+Confusion Matrix
+
+```{r model1_confusion matrix, echo=FALSE}
+pred_logit1[pred_logit1>=0.33] <- 1
+pred_logit1[pred_logit1<0.33] <- 0
+table(pred=pred_logit1, true=test$target)
+```
+
+
+The model predicted 76 0's that were actually 0.  The model predicted 5 0's that were actually 1. \n\
+The model predicted 22 1's that were actaully 0.  The model predicted 83 1's that were actually 1. \n\
+
+
+```{r stats_model1, echo=FALSE}
+accuracy1 <- acc(round(pred_logit1), test)
+error1 <- err(round(pred_logit1), test)
+precision1 <- prec(round(pred_logit1), test)
+sensitivity1 <- sens(round(pred_logit1), test)
+specificity1 <- spec(round(pred_logit1), test)
+f11 <- f1(round(pred_logit1), test)
+
+stat1 <- data.frame(list(accuracy=accuracy1, error=error1, precision=precision1, sensitivity=sensitivity1, specificity=specificity1, f1=f11))
+print(stat1)
+```
+
+
+####Prediction from Model 2: 
+
+```{r model2, echo=FALSE}
+
+pred_logit2 <- predict(logit2, newdata=test2, type="response")
+roc_vals2 <-  roc(pred_logit2,test2)
+roc_vals2$roc_plot
+print(roc_vals2$cut_off_val)
+```
+
+The cutoff associated with a point the farthest distance from the ROC curve is 0.86.  I will use 0.86 as the cutoff for making predictions.  A value above 0.86 will be assigned a target of one and a value below 0.86 wil be assigned a value of zero.
+\n\
+Confusion Matrix
+
+```{r stats_model2, echo=FALSE}
+pred_logit2[pred_logit2>=0.86] <- 1
+pred_logit2[pred_logit2<0.86] <- 0
+
+table(pred=round(pred_logit2), true=test2$target)
+
+accuracy2 <- acc(round(pred_logit2), test2)
+error2 <- err(round(pred_logit2), test2)
+precision2 <- prec(round(pred_logit2), test2)
+sensitivity2 <- sens(round(pred_logit2), test2)
+specificity2 <- spec(round(pred_logit2), test2)
+f12 <- f1(round(pred_logit2), test2)
+
+stat2 <- data.frame(list(accuracy=accuracy2, error=error2, precision=precision2, sensitivity=sensitivity2, specificity=specificity2, f1=f12))
+print(stat2)
+```
+
+
+The model predicted 97 0's that were actually 0.  The model predicted 19 0's that were actually 1. \n\
+The model predicted 2 1's that were actaully 0.  The model predicted 68 1's that were actually 1. \n\
+
+####Prediction from Model 3: 
+
+```{r model3, echo=FALSE}
+
+pred_logit3 <- predict(logit3, newdata=test3, type="response")
+roc_vals3 <-  roc(pred_logit3,test3)
+roc_vals3$roc_plot
+print(roc_vals3$cut_off_val)
+```
+
+The cutoff associated with a point the farthest distance from the ROC curve is 0.28.  I will use 0.28 as the cutoff for making predictions.  A value above 0.28 will be assigned a target of one and a value below 0.86 wil be assigned a value of zero.
+\n\
+Confusion Matrix
+
+```{r, conf_matrix3, echo=FALSE}
+pred_logit3[pred_logit3>=0.28] <- 1
+pred_logit3[pred_logit3<0.28] <- 0
+
+table(pred=round(pred_logit3), true=test3$target)
+```
+
+The model predicted 65 0's that were actually 0.  The model predicted 7 0's that were actually 1. \n\
+The model predicted 20 1's that were actaully 0.  The model predicted 94 1's that were actually 1. \n\
+
+```{r model3_stats, echo=FALSE}
+accuracy3 <- acc(round(pred_logit3), test3)
+error3 <- err(round(pred_logit3), test3)
+precision3 <- prec(round(pred_logit3), test3)
+sensitivity3 <- sens(round(pred_logit3), test3)
+specificity3 <- spec(round(pred_logit3), test3)
+f13 <- f1(round(pred_logit3), test3)
+
+stat3 <- data.frame(list(accuracy=accuracy3, error=error3, precision=precision3, sensitivity=sensitivity3, specificity=specificity3, f1=f13))
+print(stat3)
+```
