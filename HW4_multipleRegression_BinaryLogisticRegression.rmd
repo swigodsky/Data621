@@ -7,6 +7,7 @@ output: html_document
 #Multiple Logistic Regression and Binary Logistic Regression
 
 ```{r load_data, echo=FALSE}
+library(ggplot2)
 insurance <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/insurance_training_data.csv", stringsAsFactors=FALSE)
 library(stringr)
 
@@ -460,7 +461,7 @@ table(pred=round(pred_logit1), true=test1$TARGET_FLAG)
 The model predicted 1,846 0's that were actually 0.  The model predicted 257 0's that were actually 1. \n\
 The model predicted 560 1's that were actaully 0.  The model predicted 601 1's that were actually 1. \n\
 
-```{r model3_stats, echo=FALSE}
+```{r model1_stats, echo=FALSE}
 accuracy1 <- acc(round(pred_logit1), test1)
 error1 <- err(round(pred_logit1), test1)
 precision1 <- prec(round(pred_logit1), test1)
@@ -570,7 +571,7 @@ summary(logit2)
 ```
 
 Doctor has the (highest p value) lowest affect on the target and will be removed next.
-```{r remove_home_maker2, echo=FALSE}
+```{r remove_doctor2, echo=FALSE}
 logit2 <- update(logit2, .~. -Doctor, data = train2, family=binomial (link="logit"))
 summary(logit2)
 logitscalar2 <- mean(dlogis(predict(logit2,type="link")))
@@ -594,7 +595,7 @@ The cutoff associated with a point the farthest distance from the ROC curve is 0
 
 #####Confusion Matrix
 
-```{r, conf_matrix1, echo=FALSE}
+```{r, conf_matrix2, echo=FALSE}
 pred_logit2[pred_logit2>=0.33] <- 1
 pred_logit2[pred_logit2<0.33] <- 0
 
@@ -616,3 +617,229 @@ f12 <- f1(round(pred_logit2), test2)
 stat2 <- data.frame(list(accuracy=accuracy2, error=error2, precision=precision2, sensitivity=sensitivity2, specificity=specificity2, f1=f12))
 print(stat2)
 ```
+
+###Model3
+Run with a different seed for separating the data
+
+####Creating a test and training set
+```{r remove_variables, echo=FALSE}
+
+insur_df3 <-insur_df1
+
+set.seed(1)
+n <- nrow(insur_df3)
+shuffle_df3 <- insur_df3[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train3 <- shuffle_df3[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test3 <- shuffle_df3[test_indeces,]
+```
+
+Backward Regression
+```{r reg_model3, echo=FALSE}
+logit3 <- glm(train1$TARGET_FLAG ~ ., data=train3, family=binomial (link="logit"))
+logit3 <- update(logit3, .~. -TARGET_AMT, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Panel Truck has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_panel_truck3, echo=FALSE}
+logit3 <- update(logit3, .~. -`Panel Truck`, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+oldclaim_freq has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_oldclaimfreq3, echo=FALSE}
+logit3 <- update(logit3, .~. -oldclaim_freq, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+MSTATUS has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_mstatus3, echo=FALSE}
+logit3 <- update(logit3, .~. -MSTATUS, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Homekidsage has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_homekids_age3, echo=FALSE}
+logit3 <- update(logit3, .~. -homekids_age, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+BLUEBOOK has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_bluebook3, echo=FALSE}
+logit3 <- update(logit3, .~. -BLUEBOOK, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+TIF has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_tif3, echo=FALSE}
+logit3 <- update(logit3, .~. -TIF, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+REVOKED has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_revoked3, echo=FALSE}
+logit3 <- update(logit3, .~. -REVOKED, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+CAR_AGE has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_car_age3, echo=FALSE}
+logit3 <- update(logit3, .~. -CAR_AGE, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+
+
+
+Van has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_van3, echo=FALSE}
+logit3 <- update(logit3, .~. -Van, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+Pickup has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_pickup3, echo=FALSE}
+logit3 <- update(logit3, .~. -Pickup, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+MVR_PTS has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_mvrpts, echo=FALSE}
+logit3 <- update(logit3, .~. -MVR_PTS, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+KIDSDRIV has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_kidsdriv3, echo=FALSE}
+logit3 <- update(logit3, .~. -KIDSDRIV, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+YOJ has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_yoj3, echo=FALSE}
+logit3 <- update(logit3, .~. -YOJ, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Blue Collar has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_blue_collar3, echo=FALSE}
+logit3 <- update(logit3, .~. -`z_Blue Collar`, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+
+sex_redcar_suv has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_sex_redcarsuv3, echo=FALSE}
+logit3 <- update(logit3, .~. -sex_redcar_suv, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Manager has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_manager3, echo=FALSE}
+logit3 <- update(logit3, .~. -Manager, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Doctor has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_doctor3, echo=FALSE}
+logit3 <- update(logit3, .~. -Doctor, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+income_homeval_educ has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_income_homeval_educ3, echo=FALSE}
+logit3 <- update(logit3, .~. -income_homeval_educ, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Lawyer has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_lawyer3, echo=FALSE}
+logit3 <- update(logit3, .~. -Lawyer, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+TRAVTIME has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_travtime3, echo=FALSE}
+logit3 <- update(logit3, .~. -TRAVTIME, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+CAR_USE has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_car_use3, echo=FALSE}
+logit3 <- update(logit3, .~. -CAR_USE, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Professional has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_professional3, echo=FALSE}
+logit3 <- update(logit3, .~. -Professional, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Sports Car has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_sportscar3, echo=FALSE}
+logit3 <- update(logit3, .~. -`Sports Car`, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+URBANICITY has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_urbanicity3, echo=FALSE}
+logit3 <- update(logit3, .~. -URBANICITY, data = train3, family=binomial (link="logit"))
+summary(logit3)
+```
+
+Home Maker has the (highest p value) lowest affect on the target and will be removed next.
+```{r remove_home_maker3, echo=FALSE}
+logit3 <- update(logit3, .~. -`Home Maker`, data = train3, family=binomial (link="logit"))
+logitscalar3 <- mean(dlogis(predict(logit3,type="link")))
+logitscalar3*coef(logit3)
+```
+
+The variable that is likely to result in a customer not having a claim is: having a clerical job.  This seems like a very unlikely model to use to predict the likelihood a customer would get into an accident.
+
+####Prediction from Model 3
+
+```{r pred_model3, echo=FALSE}
+pred_logit3 <- predict(logit3, newdata=test3, type="response")
+
+roc_vals3 <-  roc(pred_logit3,test3)
+roc_vals3$roc_plot
+print(roc_vals3$cut_off_val)
+print(roc_vals3$auc_val)
+```
+
+The cutoff associated with a point the farthest distance from the ROC curve is 0.23.  I will use 0.23 as the cutoff for making predictions.  A value above 0.23 will be assigned a target of one and a value below 0.23 wil be assigned a value of zero.  The area under the curve is 0.48.
+
+#####Confusion Matrix
+
+```{r, conf_matrix3, echo=FALSE}
+pred_logit3[pred_logit3>=0.23] <- 1
+pred_logit3[pred_logit3<0.23] <- 0
+
+table(pred=round(pred_logit3), true=test3$TARGET_FLAG)
+```
+
+
+The model predicted 337 0's that were actually 0.  The model predicted 147 0's that were actually 1. \n\
+The model predicted 2,070 1's that were actaully 0.  The model predicted 710 1's that were actually 1. \n\
+
+```{r model3_stats, echo=FALSE}
+accuracy3 <- acc(round(pred_logit3), test3)
+error3 <- err(round(pred_logit3), test3)
+precision3 <- prec(round(pred_logit3), test3)
+sensitivity3 <- sens(round(pred_logit3), test3)
+specificity3 <- spec(round(pred_logit3), test3)
+f13 <- f1(round(pred_logit3), test3)
+
+stat3 <- data.frame(list(accuracy=accuracy3, error=error3, precision=precision3, sensitivity=sensitivity3, specificity=specificity3, f1=f13))
+print(stat3)
+```
+
+Model 2 has the highest accuracy and the highest area under the ROC curve.  I will use model 2 to build a muliple linear regression model to predict the claim amount.
+
