@@ -6,6 +6,9 @@ output: html_document
 ---
 #Multiple Logistic Regression and Binary Logistic Regression
 
+##DATA EXPLORATION and DATA PREPARATION
+The data set contains information of 8,161 customers at an auto insurance company.  The data set includes variables to create a model to predict the likelihood a customer will get into a car accident, TARGET_FLAG.  TARGET_FLAG is a binary response variable, in which 1 represents a person who gets into a car crash and 0 represents a person who does not get into a car crash.  In addition, a model will be built that will predict the cost of a claim, TARGET_AMT.  The TARGET_AMT is zero if a person does not get into a crash and varies depending on the severity of the accident.
+
 ```{r load_data, echo=FALSE}
 library(ggplot2)
 insurance <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/insurance_training_data.csv", stringsAsFactors=FALSE)
@@ -14,10 +17,6 @@ library(stringr)
 head(insurance)
 #nrow(insurance)
 ```
-
-##DATA EXPLORATION and DATA PREPARATION
-The data set contains information of 8,161 customers at an auto insurance company.  The data set includes variables to create a model to predict the likelihood a customer will get into a car accident, TARGET_FLAG.  TARGET_FLAG is a binary response variable, in which 1 represents a person who gets into a car crash and 0 represents a person who does not get into a car crash.  In addition, a model will be built that will predict the cost of a car crash, TARGET_AMT.  The TARGET_AMT is zero if a person does not get into a crash and varies depending on the severity of the accident.
-
 
 The variables that will be used to build the model are:
 
@@ -487,7 +486,7 @@ test2 <- shuffle_df2[test_indeces,]
 ```
 
 
-####Backward Elimination - Logistic Regression Model 1
+####Backward Elimination - Logistic Regression Model 2
 ```{r backward-elimination2, echo=FALSE}
 logit2 <- glm(train2$TARGET_FLAG ~ ., data=train2, family=binomial (link="logit"))
 logit2 <- update(logit2, .~. -TARGET_AMT, data = train2, family=binomial (link="logit"))
@@ -841,5 +840,801 @@ stat3 <- data.frame(list(accuracy=accuracy3, error=error3, precision=precision3,
 print(stat3)
 ```
 
-Model 2 has the highest accuracy and the highest area under the ROC curve.  I will use model 2 to build a muliple linear regression model to predict the claim amount.
+###Building a Multiple Linear Regression Model to Predict the Cost of a Claim
+I will start with logit model 2, since it has the highest accuracy and the highest area under the ROC curve.  I will use model 2 to build a muliple linear regression model to predict the claim amount.  A customer who is predicted to not have a claim (TARGET_FLAG=0) will be predicted to have 0 dollars for the TARGET_AMT.
 
+
+```{r backward-elimination2a, echo=FALSE}
+train2a <- train2
+train2a <- subset(train2a, select=-c(INDEX, TARGET_FLAG, `z_Blue Collar`, `Home Maker`, CAR_AGE, SEX, AGE, Lawyer, RED_CAR, HOME_VAL, Clerical, HOMEKIDS, YOJ, Doctor, OLDCLAIM))
+
+claim_lm <- lm(train2a$TARGET_AMT ~., data=train2a)
+summary(claim_lm)
+```
+
+Van has the lowest affect on claim amount and will be removed.  
+```{r remove_van2a, echo=FALSE}
+claim_lm <- update(claim_lm, .~. -Van, data = train2a)
+summary(claim_lm)
+```
+
+BLUEBOOK has the lowest affect on claim amount and will be removed.  
+```{r remove_bluebook2a, echo=FALSE}
+claim_lm <- update(claim_lm, .~. -BLUEBOOK, data = train2a)
+summary(claim_lm)
+```
+
+Pickup has the lowest affect on claim amount and will be removed.  
+```{r remove_pickup2a, echo=FALSE}
+claim_lm <- update(claim_lm, .~. -Pickup, data = train2a)
+summary(claim_lm)
+```
+
+CLM_FREQ has the lowest affect on claim amount and will be removed.  
+```{r remove_claimfreq2a, echo=FALSE}
+claim_lm <- update(claim_lm, .~. -CLM_FREQ, data = train2a)
+summary(claim_lm)
+```
+
+All of the remaining variables have p values lower that 0.05, which indicates that they are signficant. A p value below 0.05 indicates strong evidence against the null hypothesis that the variable in question does not affect the claim amount.
+
+The adjusted R squared value is .076.  7.6% of the variability in claim amount is accounted for by the model. This is a very unimpressive model.
+
+The F statistic is 26.44, which is high, and indicates that these variables are signficiant. 
+
+
+The following graphs look for patterns in the residuals.
+
+```{r model2, echo=FALSE}
+plot(fitted(claim_lm),resid(claim_lm))
+qqnorm(resid(claim_lm))
+qqline(resid(claim_lm))
+```
+
+There are some residuals whose values are very high, indicating a large deviation from the model.  The residuals follow the line on the QQ plot until a point, and then deviate greatly.  This is because some claims are for very large amounts and the model does not predict those very high values.
+
+
+####Prediction from Model 2a
+The root mean square error from model 2a is
+```{r pred1, echo=FALSE}
+
+predictclaim2a <- predict(claim_lm, newdata=test2, type="response")
+predictclaim2a[pred_logit2==0]<-0
+predictclaim2a[predictclaim2a<0]<-0
+
+error <- predictclaim2a-test2$TARGET_AMT
+
+rmse <- sqrt(mean(error^2))
+rmse
+```
+
+The cost of claims predicted by model 2a is off, on average, by $4907.  This is an exorbitant amount to be off by on average.  The claims for very large amounts are not predicted by my model and are causing the error to be high.
+
+####Building a Logarthmic model - Using backward elimination
+To try to better account for the very high claim amounts, I will try a logarithmic model.  This will also be built off of logit model 2.
+```{r backward-elimination2b, echo=FALSE}
+train2b <- train2
+train2b <- subset(train2b, select=-c(INDEX, TARGET_FLAG, `z_Blue Collar`, `Home Maker`, CAR_AGE, SEX, AGE, Lawyer, RED_CAR, HOME_VAL, Clerical, HOMEKIDS, YOJ, Doctor, OLDCLAIM))
+train2b[train2b==0] <- 0.000001
+claim_lm2 <- lm(log(train2b$TARGET_AMT) ~., data=train2b)
+summary(claim_lm2)
+```
+
+All of the remaining variables have p values lower that 0.05, which indicates that they are signficant. A p value below 0.05 indicates strong evidence against the null hypothesis that the variable in question does not affect the claim amount.
+
+The adjusted R squared value is .22.  22% of the variability in claim amount is accounted for by the model. This is a significant improvement over the last model.
+
+The F statistic is 70.63, which is high, and indicates that these variables are signficiant. 
+
+
+The following graphs look for patterns in the residuals.
+
+```{r model2b, echo=FALSE}
+plot(fitted(claim_lm2),resid(claim_lm2))
+qqnorm(resid(claim_lm2))
+qqline(resid(claim_lm2))
+```
+
+The residuals show a pattern and the residuals deviate from the line on the QQ plot.  These indicate that this is not a good model.
+
+####Prediction from Model 2b- Logarithmic Model
+The root mean square error from model 2 is
+```{r pred2b, echo=FALSE}
+
+predictclaim2b <- predict(claim_lm2, newdata=test2, type="response")
+predictclaim2b <- exp(predictclaim2b)
+predictclaim2b[pred_logit2==0]<-0
+predictclaim2b[predictclaim2b<0]<-0
+
+error2 <- predictclaim2b-test2$TARGET_AMT
+
+rmse2 <- sqrt(mean(error2^2))
+rmse2
+```
+
+The cost of claims predicted by model 2b is off, on average, by $5219.  This is even higher amount to be off by than the previous model.  The claims for very large amounts are not predicted by my model and are causing the error to be high.
+
+##Model Selection
+In order to predict the TARGET_FLG, which is a binary variable that describes whether or not a customer has a claim, I wil use model 2.  This is a logit model that was built using backward elimination starting with all of the variables.
+
+When comparing the three models, the accuracy is greatest for the 2nd model.  The precision is also highest for the second model.  (The precision is the ratio of correct predictions of zero to total predictions of zero.)  The sensitivity is highest for model 2.  (The sensitivity is the ratio of the correct predictions of zero to all cases in which the target is zero.) The specificity is the greatest for  model 3.  (The specificity is the ratio of the correct predictions of 1 to all cases in which the target is one.)  The F1 score is highest for the second model.  (The F1 score is equal to 2xPrecisionxSensitivity/(Precision+Sensitivity) and gives a balance between the precision and sensitivity.)  The area under the roc curve is the farthest from 0.5 for model 2.  (The farther the area is from 0.5, the better the model.)
+
+I will use model 2 to make a prediction for the test data because it has a higher accuracy, precision, sensitivity, F1 score and area under the ROC curve than the other models.
+
+The predictions for the evaluation set are below:
+```{r donwload_test_data, echo=FALSE}
+eval_data <- read.csv('https://raw.githubusercontent.com/swigodsky/Data621/master/insurance-evaluation-data.csv', stringsAsFactors = FALSE)
+
+eval_data$INCOME <- as.numeric(gsub("\\D+","",eval_data$INCOME))
+eval_data$HOME_VAL <- as.numeric(gsub("\\D+","",eval_data$HOME_VAL))
+eval_data$BLUEBOOK <- as.numeric(gsub("\\D+","",eval_data$BLUEBOOK))
+eval_data$OLDCLAIM <- as.numeric(gsub("\\D+","",eval_data$OLDCLAIM))
+
+eval_data[eval_data=="No"]<-0
+eval_data[eval_data=="Yes"]<-1
+eval_data[eval_data=="no"]<-0
+eval_data[eval_data=="yes"]<-1
+eval_data$MSTATUS[eval_data$MSTATUS=="z_No"]<-0
+eval_data$SEX[eval_data$SEX=="M"]<-0
+eval_data$SEX[eval_data$SEX=="z_F"]<-1
+eval_data$CAR_USE[eval_data$CAR_USE=="Private"]<-0
+eval_data$CAR_USE[eval_data$CAR_USE=="Commercial"]<-1
+eval_data$URBANICITY[eval_data$URBANICITY=="z_Highly Rural/ Rural"]<-0
+eval_data$URBANICITY[eval_data$URBANICITY=="Highly Urban/ Urban"]<-1
+eval_data$PARENT1 <- as.numeric(eval_data$PARENT1)
+eval_data$MSTATUS <- as.numeric(eval_data$MSTATUS)
+eval_data$SEX <- as.numeric(eval_data$SEX)
+eval_data$CAR_USE <- as.numeric(eval_data$CAR_USE)
+eval_data$RED_CAR <- as.numeric(eval_data$RED_CAR)
+eval_data$REVOKED <- as.numeric(eval_data$REVOKED)
+eval_data$URBANICITY <- as.numeric(eval_data$URBANICITY)
+
+eval_data$EDUCATION[eval_data$EDUCATION == "<High School"] <- 0
+eval_data$EDUCATION[eval_data$EDUCATION == "z_High School"] <- 1
+eval_data$EDUCATION[eval_data$EDUCATION == "Bachelors"] <- 2
+eval_data$EDUCATION[eval_data$EDUCATION == "Masters"] <- 3
+eval_data$EDUCATION[eval_data$EDUCATION == "PhD"] <- 4
+eval_data$EDUCATION <- as.numeric(eval_data$EDUCATION)
+
+eval_data <- spread(eval_data, JOB, JOB)
+eval_data$Clerical <- ifelse(is.na(eval_data$Clerical), 0, 1)
+eval_data$Doctor <- ifelse(is.na(eval_data$Doctor), 0, 1)
+eval_data$`Home Maker` <- ifelse(is.na(eval_data$`Home Maker`), 0, 1)
+eval_data$Lawyer <- ifelse(is.na(eval_data$Lawyer), 0, 1)
+eval_data$Manager <- ifelse(is.na(eval_data$Manager), 0, 1)
+eval_data$Professional <- ifelse(is.na(eval_data$Professional), 0, 1)
+eval_data$`z_Blue Collar` <- ifelse(is.na(eval_data$`z_Blue Collar`), 0, 1)
+eval_data$Clerical[eval_data$V1=='V1'] <- NA
+eval_data$Doctor[eval_data$V1=='V1'] <- NA
+eval_data$`Home Maker`[eval_data$V1=='V1'] <- NA
+eval_data$Lawyer[eval_data$V1=='V1'] <- NA
+eval_data$Manager[eval_data$V1=='V1'] <- NA
+eval_data$Professional[eval_data$V1=='V1'] <- NA
+eval_data$`z_Blue Collar`[eval_data$V1=='V1'] <- NA
+
+eval_data <- spread(eval_data, CAR_TYPE, CAR_TYPE)
+eval_data$`Panel Truck` <- ifelse(is.na(eval_data$`Panel Truck`), 0, 1)
+eval_data$z_SUV <- ifelse(is.na(eval_data$z_SUV), 0, 1)
+eval_data$Van <- ifelse(is.na(eval_data$Van), 0, 1)
+eval_data$Pickup <- ifelse(is.na(eval_data$Pickup), 0, 1)
+eval_data$`Sports Car` <- ifelse(is.na(eval_data$`Sports Car`), 0, 1)
+
+eval_data <- subset(eval_data, select=-c(V1, Student, Minivan))
+
+eval_data$CAR_AGE[eval_data$CAR_AGE < 0] <-NA
+eval_data$CAR_AGE[is.na(eval_data$CAR_AGE)] <- med_car_age
+eval_data$INCOME[is.na(eval_data$INCOME)] <- med_income
+eval_data$YOJ[is.na(eval_data$YOJ)] <- med_yoj
+eval_data$AGE[is.na(eval_data$AGE)] <- med_age
+eval_data$HOME_VAL[is.na(eval_data$HOME_VAL)] <- med_home_val
+
+pred_flg <- predict(logit2, newdata=eval_data, type="response")
+pred_flg[pred_flg>=0.33] <- 1
+pred_flg[pred_flg<0.33] <- 0
+pred_flg
+```
+
+I will use model 2a to predict the claim amount because that model had the lower root mean square error.
+```{r clmamt, echo=FALSE}
+predclm <- predict(claim_lm, newdata=eval_data, type="response")
+predclm[pred_flg==0]<-0
+predclm[pred_flg<0]<-0
+predclm
+```
+ 
+##APPENDIX
+
+library(ggplot2)
+insurance <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/insurance_training_data.csv", stringsAsFactors=FALSE)
+library(stringr)
+
+head(insurance)
+nrow(insurance)
+
+library(tidyr)
+library(dplyr)
+
+insur_df <- insurance
+insur_df$INCOME <- as.numeric(gsub("\\D+","",insur_df$INCOME))
+insur_df$HOME_VAL <- as.numeric(gsub("\\D+","",insur_df$HOME_VAL))
+insur_df$BLUEBOOK <- as.numeric(gsub("\\D+","",insur_df$BLUEBOOK))
+insur_df$OLDCLAIM <- as.numeric(gsub("\\D+","",insur_df$OLDCLAIM))
+
+insur_df[insur_df=="No"]<-0
+insur_df[insur_df=="Yes"]<-1
+insur_df[insur_df=="no"]<-0
+insur_df[insur_df=="yes"]<-1
+insur_df$MSTATUS[insur_df$MSTATUS=="z_No"]<-0
+insur_df$SEX[insur_df$SEX=="M"]<-0
+insur_df$SEX[insur_df$SEX=="z_F"]<-1
+insur_df$CAR_USE[insur_df$CAR_USE=="Private"]<-0
+insur_df$CAR_USE[insur_df$CAR_USE=="Commercial"]<-1
+insur_df$URBANICITY[insur_df$URBANICITY=="z_Highly Rural/ Rural"]<-0
+insur_df$URBANICITY[insur_df$URBANICITY=="Highly Urban/ Urban"]<-1
+insur_df$PARENT1 <- as.numeric(insur_df$PARENT1)
+insur_df$MSTATUS <- as.numeric(insur_df$MSTATUS)
+insur_df$SEX <- as.numeric(insur_df$SEX)
+insur_df$CAR_USE <- as.numeric(insur_df$CAR_USE)
+insur_df$RED_CAR <- as.numeric(insur_df$RED_CAR)
+insur_df$REVOKED <- as.numeric(insur_df$REVOKED)
+insur_df$URBANICITY <- as.numeric(insur_df$URBANICITY)
+
+insur_df$EDUCATION[insur_df$EDUCATION == "<High School"] <- 0
+insur_df$EDUCATION[insur_df$EDUCATION == "z_High School"] <- 1
+insur_df$EDUCATION[insur_df$EDUCATION == "Bachelors"] <- 2
+insur_df$EDUCATION[insur_df$EDUCATION == "Masters"] <- 3
+insur_df$EDUCATION[insur_df$EDUCATION == "PhD"] <- 4
+insur_df$EDUCATION <- as.numeric(insur_df$EDUCATION)
+
+insur_df <- spread(insur_df, JOB, JOB)
+insur_df$Clerical <- ifelse(is.na(insur_df$Clerical), 0, 1)
+insur_df$Doctor <- ifelse(is.na(insur_df$Doctor), 0, 1)
+insur_df$`Home Maker` <- ifelse(is.na(insur_df$`Home Maker`), 0, 1)
+insur_df$Lawyer <- ifelse(is.na(insur_df$Lawyer), 0, 1)
+insur_df$Manager <- ifelse(is.na(insur_df$Manager), 0, 1)
+insur_df$Professional <- ifelse(is.na(insur_df$Professional), 0, 1)
+insur_df$`z_Blue Collar` <- ifelse(is.na(insur_df$`z_Blue Collar`), 0, 1)
+insur_df$Clerical[insur_df$V1=='V1'] <- NA
+insur_df$Doctor[insur_df$V1=='V1'] <- NA
+insur_df$`Home Maker`[insur_df$V1=='V1'] <- NA
+insur_df$Lawyer[insur_df$V1=='V1'] <- NA
+insur_df$Manager[insur_df$V1=='V1'] <- NA
+insur_df$Professional[insur_df$V1=='V1'] <- NA
+insur_df$`z_Blue Collar`[insur_df$V1=='V1'] <- NA
+
+insur_df <- spread(insur_df, CAR_TYPE, CAR_TYPE)
+insur_df$`Panel Truck` <- ifelse(is.na(insur_df$`Panel Truck`), 0, 1)
+insur_df$z_SUV <- ifelse(is.na(insur_df$z_SUV), 0, 1)
+insur_df$Van <- ifelse(is.na(insur_df$Van), 0, 1)
+insur_df$Pickup <- ifelse(is.na(insur_df$Pickup), 0, 1)
+insur_df$`Sports Car` <- ifelse(is.na(insur_df$`Sports Car`), 0, 1)
+
+insur_df <- subset(insur_df, select=-c(V1, Student, Minivan))
+
+insurance_variables <- subset(insur_df, select=-c(INDEX, TARGET_FLAG, TARGET_AMT))
+head(insurance_variables)
+summary(insurance_variables)
+
+insur_df$CAR_AGE[insur_df$CAR_AGE < 0] <-NA
+summary(insur_df$CAR_AGE)
+plot(insur_df$CAR_AGE, ylab="Car Age")
+hist(insur_df$CAR_AGE, xlab="Car Age",main="Histogram of Car Age")
+boxplot(insur_df$CAR_AGE, main="Car Age")
+med_car_age <- median(insur_df$CAR_AGE, na.rm=T)
+insur_df$CAR_AGE[is.na(insur_df$CAR_AGE)] <- med_car_age
+
+plot(insur_df$INCOME, ylab="Income")
+hist(insur_df$INCOME, xlab="Income",main="Histogram of Income")
+boxplot(insur_df$INCOME, main="Income")
+med_income <- median(insur_df$INCOME, na.rm=T)
+insur_df$INCOME[is.na(insur_df$INCOME)] <- med_income
+
+plot(insur_df$YOJ, ylab="Year On The Job")
+hist(insur_df$YOJ, xlab="Year On The Job",main="Histogram of Year On The Job")
+boxplot(insur_df$YOJ, main="Year On The Job")
+med_yoj <- median(insur_df$YOJ, na.rm=T)
+insur_df$YOJ[is.na(insur_df$YOJ)] <- med_yoj
+
+plot(insur_df$AGE, ylab="Age")
+hist(insur_df$AGE, xlab="Age",main="Age")
+boxplot(insur_df$AGE, main="Age")
+med_age <- median(insur_df$AGE, na.rm=T)
+insur_df$AGE[is.na(insur_df$AGE)] <- med_age
+
+insur_df$HOME_VAL[insur_df$HOME_VAL == 0] <-NA
+summary(insur_df$HOME_VAL)
+plot(insur_df$HOME_VAL, ylab="Home Value")
+hist(insur_df$HOME_VAL, xlab="Home Value",main="Histogram of Home Value")
+boxplot(insur_df$HOME_VAL, main="Home Value")
+med_home_val <- median(insur_df$HOME_VAL, na.rm=T)
+insur_df$HOME_VAL[is.na(insur_df$HOME_VAL)] <- med_home_val
+
+library(corrplot)
+insurance_variables <- subset(insur_df, select=-c(INDEX, TARGET_FLAG, TARGET_AMT))
+correlation <- cor(insurance_variables, method = "pearson")
+corrplot(correlation, type="upper", method="color")
+
+insur_df1 <- insur_df
+
+homekids_age <- insur_df1$HOMEKIDS * insur_df1$AGE
+insur_df1 <- cbind(insur_df1, homekids_age)
+
+income_homeval_educ <- (insur_df1$INCOME + insur_df1$HOME_VAL)*insur_df1$EDUCATION
+insur_df1 <- cbind(insur_df1, income_homeval_educ)
+
+sex_redcar_suv <- insur_df1$SEX + insur_df1$RED_CAR + insur_df1$z_SUV
+insur_df1 <- cbind(insur_df1, sex_redcar_suv)
+
+oldclaim_freq <- insur_df1$OLDCLAIM + insur_df1$CLM_FREQ
+insur_df1 <- cbind(insur_df1, oldclaim_freq)
+
+insur_df1 <-subset(insur_df1, select=-c(INDEX, PARENT1,HOMEKIDS,AGE,INCOME,HOME_VAL, EDUCATION, SEX, RED_CAR, z_SUV, OLDCLAIM, CLM_FREQ))
+
+summary(insur_df1)
+
+set.seed(15)
+n <- nrow(insur_df1)
+shuffle_df1 <- insur_df1[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train1 <- shuffle_df1[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test1 <- shuffle_df1[test_indeces,]
+
+logit1 <- glm(train1$TARGET_FLAG ~ ., data=train1, family=binomial (link="logit"))
+logit1 <- update(logit1, .~. -TARGET_AMT, data = train1, family=binomial (link="logit"))
+summary(logit1)
+
+logit1 <- update(logit1, .~. -`Home Maker`, data = train1, family=binomial (link="logit"))
+summary(logit1)
+
+logit1 <- update(logit1, .~. -Lawyer, data = train1, family=binomial (link="logit"))
+summary(logit1)
+
+logit1 <- update(logit1, .~. -`z_Blue Collar`, data = train1, family=binomial (link="logit"))
+summary(logit1)
+
+logit1 <- update(logit1, .~. -CAR_AGE, data = train1, family=binomial (link="logit"))
+summary(logit1)
+
+logit1 <- update(logit1, .~. -oldclaim_freq, data = train1, family=binomial (link="logit"))
+summary(logit1)
+
+logit1 <- update(logit1, .~. -Doctor, data = train1, family=binomial (link="logit"))
+summary(logit1)
+logitscalar1 <- mean(dlogis(predict(logit1,type="link")))
+logitscalar1*coef(logit1)
+
+acc <- function(pred, test){
+  totalnum <- length(pred) 
+  numRight <- length(which(pred==test$TARGET_FLAG))
+  accuracy <- numRight/totalnum
+  return(accuracy)
+} 
+
+err <- function(pred, test){
+  totalnum <- length(pred) 
+  numWrong <- length(which(pred!=test$TARGET_FLAG))
+  error <- numWrong/totalnum
+  return(error)
+} 
+
+prec <- function(pred, test){
+  true_pos <- length(which((pred==0)&(test$TARGET_FLAG==0)))
+  all_pos <- length(which(test$TARGET_FLAG==0)) + length(which(pred==0))
+  precision <- true_pos/all_pos
+  return(precision)
+} 
+
+sens <- function(pred, test){
+  true_pos <- length(which((pred==0)&(test$TARGET_FLAG==0)))
+  false_neg <- length(which((pred==1)&(test$TARGET_FLAG==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  return(sensitivity)
+} 
+
+spec <- function(pred, test){
+  true_neg <- length(which((pred==1)&(test$TARGET_FLAG==1)))
+  false_pos <- length(which((pred==0)&(test$TARGET_FLAG==1)))
+  sensitivity <- true_neg/(true_neg+false_pos)
+  return(sensitivity)
+}
+
+f1 <- function(pred, test){
+  true_pos <- length(which((pred==0)&(test$TARGET_FLAG==0)))
+  all_pos <- length(which(test$TARGET_FLAG==0)) + length(which(pred==0))
+  precision <- true_pos/all_pos
+  
+  false_neg <- length(which((pred==1)&(test$TARGET_FLAG==0)))
+  sensitivity <- true_pos/(true_pos+false_neg)
+  
+  f1 <- 2*precision*sensitivity/(precision+sensitivity)
+  return(f1)
+}
+#distance function taken from https://stackoverflow.com/questions/35194048/using-r-how-to-calculate-the-distance-from-one-point-to-a-line
+dist2d <- function(a,b,c) {
+ v1 <- b - c
+ v2 <- a - b
+ m <- cbind(v1,v2)
+ d2 <- abs(det(m))/sqrt(sum(v1*v1))
+ return(d2)
+} 
+
+roc <- function(pred,test){
+  d <- 0 #set distance between point and line y=x to 0
+  roc_tester <- data.frame(o_m_specificity=NA, sensitivity=NA)[numeric(0), ]
+  auc=0
+  for (cutoff in seq(0,1.0,0.01)){
+    test_df <- pred #make a copy of the predictions
+    #set scored (predicted) values in test_df according to whether the probability is above or below the cut-off threshold
+    test_df[test_df < cutoff] <- 0
+    test_df[test_df >= cutoff] <- 1
+
+    spec_val <- spec(test_df, test)
+    sens_val <- sens(test_df, test)
+      
+    roc_tester <- rbind(roc_tester, list(o_m_specificity=1-spec_val,sensitivity= sens_val))
+  #calculating Euclidean distance between point and y=x
+    a2 <- c(1-spec_val,sens_val)
+    b2 <- c(0,0)
+    c2 <- c(1,1)
+    d2 <- dist2d(a2,b2,c2) # distance of point a from line (b,c)
+    if (d2>d){
+      d <- d2
+      cut_off_val <- cutoff
+    }
+    
+
+    #calculating area of trapezoid for each set of data points  
+    if (cutoff>=0.1){
+      num_values = nrow(roc_tester)
+      base2 = roc_tester$sensitivity[num_values]
+      base1 = roc_tester$sensitivity[num_values-1]
+      height2 = roc_tester$o_m_specificity[num_values]
+      height1 = roc_tester$o_m_specificity[num_values-1]
+      area = .5*(base1+base2)*(height2-height1)
+      auc = auc + area
+    }
+  }
+
+    roc_plot <- ggplot(roc_tester, aes(x = o_m_specificity, y = sensitivity)) + geom_point() + geom_abline(slope=1) + labs(x="False Positive Rate (1-specificity)", y="True Positive Rate (sensitivity)", title="ROC Curve" )
+      
+  return(list(roc_plot=roc_plot, auc_val=auc, cut_off_val=cut_off_val))
+}
+
+pred_logit1 <- predict(logit1, newdata=test1, type="response")
+
+roc_vals <-  roc(pred_logit1,test1)
+roc_vals$roc_plot
+print(roc_vals$cut_off_val)
+print(roc_vals$auc_val)
+
+pred_logit1[pred_logit1>=0.32] <- 1
+pred_logit1[pred_logit1<0.32] <- 0
+
+table(pred=round(pred_logit1), true=test1$TARGET_FLAG)
+
+accuracy1 <- acc(round(pred_logit1), test1)
+error1 <- err(round(pred_logit1), test1)
+precision1 <- prec(round(pred_logit1), test1)
+sensitivity1 <- sens(round(pred_logit1), test1)
+specificity1 <- spec(round(pred_logit1), test1)
+f11 <- f1(round(pred_logit1), test1)
+
+stat1 <- data.frame(list(accuracy=accuracy1, error=error1, precision=precision1, sensitivity=sensitivity1, specificity=specificity1, f1=f11))
+print(stat1)
+
+set.seed(15)
+n <- nrow(insur_df)
+shuffle_df2 <- insur_df[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train2 <- shuffle_df2[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test2 <- shuffle_df2[test_indeces,]
+
+logit2 <- glm(train2$TARGET_FLAG ~ ., data=train2, family=binomial (link="logit"))
+logit2 <- update(logit2, .~. -TARGET_AMT, data = train2, family=binomial (link="logit"))
+logit2 <- update(logit2, .~. -INDEX, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -`z_Blue Collar`, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -`Home Maker`, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -CAR_AGE, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -SEX, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -AGE, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -Lawyer, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -RED_CAR, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -HOME_VAL, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -Clerical, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -HOMEKIDS, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -YOJ, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -OLDCLAIM, data = train2, family=binomial (link="logit"))
+summary(logit2)
+
+logit2 <- update(logit2, .~. -Doctor, data = train2, family=binomial (link="logit"))
+summary(logit2)
+logitscalar2 <- mean(dlogis(predict(logit2,type="link")))
+logitscalar2*coef(logit2)
+
+pred_logit2 <- predict(logit2, newdata=test2, type="response")
+
+roc_vals2 <-  roc(pred_logit2,test2)
+roc_vals2$roc_plot
+print(roc_vals2$cut_off_val)
+print(roc_vals2$auc_val)
+
+pred_logit2[pred_logit2>=0.33] <- 1
+pred_logit2[pred_logit2<0.33] <- 0
+
+table(pred=round(pred_logit2), true=test2$TARGET_FLAG)
+
+accuracy2 <- acc(round(pred_logit2), test2)
+error2 <- err(round(pred_logit2), test2)
+precision2 <- prec(round(pred_logit2), test2)
+sensitivity2 <- sens(round(pred_logit2), test2)
+specificity2 <- spec(round(pred_logit2), test2)
+f12 <- f1(round(pred_logit2), test2)
+
+stat2 <- data.frame(list(accuracy=accuracy2, error=error2, precision=precision2, sensitivity=sensitivity2, specificity=specificity2, f1=f12))
+print(stat2)
+
+insur_df3 <-insur_df1
+
+set.seed(1)
+n <- nrow(insur_df3)
+shuffle_df3 <- insur_df3[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train3 <- shuffle_df3[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test3 <- shuffle_df3[test_indeces,]
+
+logit3 <- glm(train1$TARGET_FLAG ~ ., data=train3, family=binomial (link="logit"))
+logit3 <- update(logit3, .~. -TARGET_AMT, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -`Panel Truck`, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -oldclaim_freq, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -MSTATUS, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -homekids_age, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -BLUEBOOK, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -TIF, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -REVOKED, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -CAR_AGE, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -Van, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -Pickup, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -MVR_PTS, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -KIDSDRIV, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -YOJ, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -`z_Blue Collar`, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -sex_redcar_suv, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -Manager, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -Doctor, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -income_homeval_educ, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -Lawyer, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -TRAVTIME, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -CAR_USE, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -Professional, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -`Sports Car`, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -URBANICITY, data = train3, family=binomial (link="logit"))
+summary(logit3)
+
+logit3 <- update(logit3, .~. -`Home Maker`, data = train3, family=binomial (link="logit"))
+logitscalar3 <- mean(dlogis(predict(logit3,type="link")))
+logitscalar3*coef(logit3)
+
+pred_logit3 <- predict(logit3, newdata=test3, type="response")
+
+roc_vals3 <-  roc(pred_logit3,test3)
+roc_vals3$roc_plot
+print(roc_vals3$cut_off_val)
+print(roc_vals3$auc_val)
+
+pred_logit3[pred_logit3>=0.23] <- 1
+pred_logit3[pred_logit3<0.23] <- 0
+
+table(pred=round(pred_logit3), true=test3$TARGET_FLAG)
+
+accuracy3 <- acc(round(pred_logit3), test3)
+error3 <- err(round(pred_logit3), test3)
+precision3 <- prec(round(pred_logit3), test3)
+sensitivity3 <- sens(round(pred_logit3), test3)
+specificity3 <- spec(round(pred_logit3), test3)
+f13 <- f1(round(pred_logit3), test3)
+
+stat3 <- data.frame(list(accuracy=accuracy3, error=error3, precision=precision3, sensitivity=sensitivity3, specificity=specificity3, f1=f13))
+print(stat3)
+
+train2a <- train2
+train2a <- subset(train2a, select=-c(INDEX, TARGET_FLAG, `z_Blue Collar`, `Home Maker`, CAR_AGE, SEX, AGE, Lawyer, RED_CAR, HOME_VAL, Clerical, HOMEKIDS, YOJ, Doctor, OLDCLAIM))
+
+claim_lm <- lm(train2a$TARGET_AMT ~., data=train2a)
+summary(claim_lm)
+
+claim_lm <- update(claim_lm, .~. -Van, data = train2a)
+summary(claim_lm)
+
+claim_lm <- update(claim_lm, .~. -BLUEBOOK, data = train2a)
+summary(claim_lm)
+
+claim_lm <- update(claim_lm, .~. -Pickup, data = train2a)
+summary(claim_lm)
+
+claim_lm <- update(claim_lm, .~. -CLM_FREQ, data = train2a)
+summary(claim_lm)
+
+plot(fitted(claim_lm),resid(claim_lm))
+qqnorm(resid(claim_lm))
+qqline(resid(claim_lm))
+
+predictclaim2a <- predict(claim_lm, newdata=test2, type="response")
+predictclaim2a[pred_logit2==0]<-0
+predictclaim2a[predictclaim2a<0]<-0
+
+error <- predictclaim2a-test2$TARGET_AMT
+
+rmse <- sqrt(mean(error^2))
+rmse
+
+train2b <- train2
+train2b <- subset(train2b, select=-c(INDEX, TARGET_FLAG, `z_Blue Collar`, `Home Maker`, CAR_AGE, SEX, AGE, Lawyer, RED_CAR, HOME_VAL, Clerical, HOMEKIDS, YOJ, Doctor, OLDCLAIM))
+train2b[train2b==0] <- 0.000001
+claim_lm2 <- lm(log(train2b$TARGET_AMT) ~., data=train2b)
+summary(claim_lm2)
+
+plot(fitted(claim_lm2),resid(claim_lm2))
+qqnorm(resid(claim_lm2))
+qqline(resid(claim_lm2))
+
+predictclaim2b <- predict(claim_lm2, newdata=test2, type="response")
+predictclaim2b <- exp(predictclaim2b)
+predictclaim2b[pred_logit2==0]<-0
+predictclaim2b[predictclaim2b<0]<-0
+
+error2 <- predictclaim2b-test2$TARGET_AMT
+
+rmse2 <- sqrt(mean(error2^2))
+rmse2
+
+eval_data <- read.csv('https://raw.githubusercontent.com/swigodsky/Data621/master/insurance-evaluation-data.csv', stringsAsFactors = FALSE)
+
+eval_data$INCOME <- as.numeric(gsub("\\D+","",eval_data$INCOME))
+eval_data$HOME_VAL <- as.numeric(gsub("\\D+","",eval_data$HOME_VAL))
+eval_data$BLUEBOOK <- as.numeric(gsub("\\D+","",eval_data$BLUEBOOK))
+eval_data$OLDCLAIM <- as.numeric(gsub("\\D+","",eval_data$OLDCLAIM))
+
+eval_data[eval_data=="No"]<-0
+eval_data[eval_data=="Yes"]<-1
+eval_data[eval_data=="no"]<-0
+eval_data[eval_data=="yes"]<-1
+eval_data$MSTATUS[eval_data$MSTATUS=="z_No"]<-0
+eval_data$SEX[eval_data$SEX=="M"]<-0
+eval_data$SEX[eval_data$SEX=="z_F"]<-1
+eval_data$CAR_USE[eval_data$CAR_USE=="Private"]<-0
+eval_data$CAR_USE[eval_data$CAR_USE=="Commercial"]<-1
+eval_data$URBANICITY[eval_data$URBANICITY=="z_Highly Rural/ Rural"]<-0
+eval_data$URBANICITY[eval_data$URBANICITY=="Highly Urban/ Urban"]<-1
+eval_data$PARENT1 <- as.numeric(eval_data$PARENT1)
+eval_data$MSTATUS <- as.numeric(eval_data$MSTATUS)
+eval_data$SEX <- as.numeric(eval_data$SEX)
+eval_data$CAR_USE <- as.numeric(eval_data$CAR_USE)
+eval_data$RED_CAR <- as.numeric(eval_data$RED_CAR)
+eval_data$REVOKED <- as.numeric(eval_data$REVOKED)
+eval_data$URBANICITY <- as.numeric(eval_data$URBANICITY)
+
+eval_data$EDUCATION[eval_data$EDUCATION == "<High School"] <- 0
+eval_data$EDUCATION[eval_data$EDUCATION == "z_High School"] <- 1
+eval_data$EDUCATION[eval_data$EDUCATION == "Bachelors"] <- 2
+eval_data$EDUCATION[eval_data$EDUCATION == "Masters"] <- 3
+eval_data$EDUCATION[eval_data$EDUCATION == "PhD"] <- 4
+eval_data$EDUCATION <- as.numeric(eval_data$EDUCATION)
+
+eval_data <- spread(eval_data, JOB, JOB)
+eval_data$Clerical <- ifelse(is.na(eval_data$Clerical), 0, 1)
+eval_data$Doctor <- ifelse(is.na(eval_data$Doctor), 0, 1)
+eval_data$`Home Maker` <- ifelse(is.na(eval_data$`Home Maker`), 0, 1)
+eval_data$Lawyer <- ifelse(is.na(eval_data$Lawyer), 0, 1)
+eval_data$Manager <- ifelse(is.na(eval_data$Manager), 0, 1)
+eval_data$Professional <- ifelse(is.na(eval_data$Professional), 0, 1)
+eval_data$`z_Blue Collar` <- ifelse(is.na(eval_data$`z_Blue Collar`), 0, 1)
+eval_data$Clerical[eval_data$V1=='V1'] <- NA
+eval_data$Doctor[eval_data$V1=='V1'] <- NA
+eval_data$`Home Maker`[eval_data$V1=='V1'] <- NA
+eval_data$Lawyer[eval_data$V1=='V1'] <- NA
+eval_data$Manager[eval_data$V1=='V1'] <- NA
+eval_data$Professional[eval_data$V1=='V1'] <- NA
+eval_data$`z_Blue Collar`[eval_data$V1=='V1'] <- NA
+
+eval_data <- spread(eval_data, CAR_TYPE, CAR_TYPE)
+eval_data$`Panel Truck` <- ifelse(is.na(eval_data$`Panel Truck`), 0, 1)
+eval_data$z_SUV <- ifelse(is.na(eval_data$z_SUV), 0, 1)
+eval_data$Van <- ifelse(is.na(eval_data$Van), 0, 1)
+eval_data$Pickup <- ifelse(is.na(eval_data$Pickup), 0, 1)
+eval_data$`Sports Car` <- ifelse(is.na(eval_data$`Sports Car`), 0, 1)
+
+eval_data <- subset(eval_data, select=-c(V1, Student, Minivan))
+
+eval_data$CAR_AGE[eval_data$CAR_AGE < 0] <-NA
+eval_data$CAR_AGE[is.na(eval_data$CAR_AGE)] <- med_car_age
+eval_data$INCOME[is.na(eval_data$INCOME)] <- med_income
+eval_data$YOJ[is.na(eval_data$YOJ)] <- med_yoj
+eval_data$AGE[is.na(eval_data$AGE)] <- med_age
+eval_data$HOME_VAL[is.na(eval_data$HOME_VAL)] <- med_home_val
+
+pred_flg <- predict(logit2, newdata=eval_data, type="response")
+pred_flg[pred_flg>=0.33] <- 1
+pred_flg[pred_flg<0.33] <- 0
+pred_flg
+
+predclm <- predict(claim_lm, newdata=eval_data, type="response")
+predclm[pred_flg==0]<-0
+predclm[pred_flg<0]<-0
+predclm
+
+ 
