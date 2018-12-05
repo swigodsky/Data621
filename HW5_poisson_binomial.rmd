@@ -1,0 +1,162 @@
+---
+title: "DATA_621_HW5"
+author: "Sarah Wigodsky"
+date: "December 4, 2018"
+output: html_document
+---
+
+##DATA EXPLORATION
+
+```{r load_data, echo=FALSE}
+wine <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/wine-training-data.csv", stringsAsFactors = FALSE)
+head(wine)
+#nrow(wine)
+```
+
+The data set consists of 12,795 records of different wines.  The variables are mostly related to the chemical properties of the wines.  The goal is to use the variables to create a model that predicts the number of cases of that wine that would be purchased by distribution companies.
+
+The following is a list of variable that will be used to predict the number of cases:
+
+  - AcidIndex - Proprietary method of testing total acidity of wine by using a weighted average
+  - Alcohol - Alcohol Content
+  - Chlorides - Chloride content of wine
+  - CitricAcid - Citric Acid Content
+  - Density - Density of Wine
+  - FixedAcidity - Fixed Acidity of Wine
+  - FreeSulfurDioxide - Sulfur Dioxide content of wine
+  - LabelAppeal - Marketing Score indicating the appeal of label design for consumers. High numbers suggest customers like the label design. Negative numbers suggest customes don't like the design.
+  - ResidualSugar - Residual Sugar of wine
+  - STARS - Wine rating by a team of experts. 4 Stars = Excellent, 1 Star = Poor 
+  - Sulphates - Sulfate content of wine
+  - TotalSulfurDioxide - Total Sulfur Dioxide of Wine
+  - VolatileAcidity - Volatile Acid content of wine
+  - pH - pH of wine
+
+The following are sumamry statistics for each of the variables described above:
+```{r summary_statistics, echo=FALSE}
+wine_index_removed <- wine[-1]
+summary(wine_index_removed)
+```
+
+###Correlation of Variables
+The following are the correlation values between each of the variables. The closer the correlation is to 1 or -1, the more highly correlated the variables.
+```{r correlation, echo=FALSE, fig.width=10, message=FALSE}
+library(corrplot)
+correlation <- cor(wine_index_removed, method = "pearson",use="complete.obs")
+#correlation
+corrplot(correlation, type="upper", method="color")
+```
+
+
+The target variable is positively correlated with LabelAppeal and STARS.  The target variable is negavitely correlated with VolatileAcidity and Acid Index.
+
+In terms of the independent variables, AcidIndex and FixedAcidity are positively correlated.  This makes sense as they are both measuring acidity.
+
+STARS and LabelAppeal are positively correlated.  Perhaps the appearance affects the number of stars the wine is given.  Or perhaps that better wines tend to make more effort on their label.
+
+#####Investigating the Relationship Between AcidIndex and FixedAcidity
+```{r acid_investigation, echo=FALSE}
+plot(wine$AcidIndex, ylab="Acid Index")
+hist(wine$AcidIndex, xlab="Acid Index",main="Histogram of Acid Index")
+boxplot(wine$AcidIndex, main="Acid Index")
+
+plot(wine$FixedAcidity, ylab="Fixed Acidity")
+hist(wine$FixedAcidity, xlab="Fixed Acidity",main="Histogram of Fixed Acidity")
+boxplot(wine$FixedAcidity, main="Fixed Acidity")
+
+plot(wine$FixedAcidity,wine$AcidIndex, xlab="Fixed Acidity", ylab="Acid Index", main="Relationship Between Acid Index and Fixed Acidity")
+abline(lm(wine$AcidIndex~wine$FixedAcidity),col="red")
+```
+
+Acid index is an integer value, which ranges between 4 and 17.  Its mean is 7.8 and its median is 8.  It is skewed to the right. Wines with acid indeces 5 and below as well as those with indeces 10 and above are outliers.
+
+Fixed Acidity is a decimal value, which ranges between -18.1 and 34.4.  By far most of the values lie between 5 and 10.  The mean and median are both about 7, and the other values are equally distributed above and below.  Fixed Acidities above 15 and below -1 are outliers.
+
+The graph of acid index vs. fixed acidity displays a slight positive trend, but it is not as clear of a relationship as I was expecting.
+
+
+#####Investigating the Relationship Between STARS and LabelAppeal
+```{r acid_investigation, echo=FALSE}
+hist(wine$STARS, xlab="Stars",main="Histogram of Stars")
+boxplot(wine$STARS, main="Stars")
+
+hist(wine$LabelAppeal, xlab="Label Appeal",main="Histogram of Label Appeal")
+boxplot(wine$LabelAppeal, main="Label Appeal")
+
+plot(wine$LabelAppeal,wine$STARS, xlab="Label Appeal", ylab="Stars", main="Relationship Between Label Appeal and Stars")
+abline(lm(wine$STARS~wine$LabelAppeal),col="red")
+```
+
+Wines are rated with stars ranging as integers between 1 and 4.  Most wines are given ratings of 1 or 2. There are no outliers.
+
+Label appeal is an integer rating between -2 and 2.  The distribution looks normal and is centered at 0. There are no outliers.
+
+There is a positive trend between label appeal and the number of stars.
+
+###Missing Values
+There are missing values for Residual Sugar, Chlorides, FreeSulfurDioxide, TotalSulfurDioxide, pH, Sulphates, Alcohol and STARS.
+
+```{r missing values, echo=FALSE}
+plot(wine$ResidualSugar, ylab="Residual Sugar")
+hist(wine$ResidualSugar, xlab="Residual Sugar",main="Histogram of Residual Sugar")
+boxplot(wine$ResidualSugar, main="Residual Sugar")
+
+plot(wine$Chlorides, ylab="Chlorides")
+hist(wine$Chlorides, xlab="Chlorides",main="Histogram of Chlorides")
+boxplot(wine$Chlorides, main="Chlorides")
+
+plot(wine$FreeSulfurDioxide, ylab="Free Sulfur Dioxide")
+hist(wine$FreeSulfurDioxide, xlab="Free Sulfur Dioxide",main="Histogram of Free Sulfur Dioxide")
+boxplot(wine$FreeSulfurDioxide, main="Free Sulfur Dioxide")
+
+plot(wine$TotalSulfurDioxide, ylab="Total Sulfur Dioxide")
+hist(wine$TotalSulfurDioxide, xlab="Total Sulfur Dioxide",main="Histogram of Total Sulfur Dioxide")
+boxplot(wine$TotalSulfurDioxide, main="Total Sulfur Dioxide")
+
+plot(wine$pH, ylab="pH")
+hist(wine$pH, xlab="pH",main="Histogram of pH")
+boxplot(wine$pH, main="pH")
+
+plot(wine$Sulphates, ylab="Sulphates")
+hist(wine$Sulphates, xlab="Sulphates",main="Histogram of Sulphates")
+boxplot(wine$Sulphates, main="Sulphates")
+
+plot(wine$Alcohol, ylab="Alcohol")
+hist(wine$Alcohol, xlab="Alcohol",main="Histogram of Alcohol")
+boxplot(wine$Alcohol, main="Alcohol")
+```
+
+The distributions for Residual Sugar, Chlorides, FreeSulfurDioxide, TotalSulfurDioxide, pH, Sulphates, Alcohol have most of the values clustered around the mean.  
+
+##DATA PREPARATION
+Because the variables that have missing values are most values near the mean, I will impute the mean for the missing values.
+```{r impute_mean, echo=FALSE}
+wine_imputed <- wine
+
+mean_res_sugar <- mean(wine_imputed$ResidualSugar, na.rm=T)
+wine_imputed$ResidualSugar[is.na(wine_imputed$ResidualSugar)] <- mean_res_sugar
+
+mean_chlorides <- mean(wine_imputed$Chlorides, na.rm=T)
+wine_imputed$Chlorides[is.na(wine_imputed$Chlorides)] <- mean_chlorides
+
+mean_freesulfdiox <- mean(wine_imputed$FreeSulfurDioxide, na.rm=T)
+wine_imputed$FreeSulfurDioxide[is.na(wine_imputed$FreeSulfurDioxide)] <- mean_freesulfdiox
+
+mean_pH <- mean(wine_imputed$pH, na.rm=T)
+wine_imputed$pH[is.na(wine_imputed$pH)] <- mean_pH
+
+mean_totsulfdiox <- mean(wine_imputed$TotalSulfurDioxide, na.rm=T)
+wine_imputed$TotalSulfurDioxide[is.na(wine_imputed$TotalSulfurDioxide)] <- mean_totsulfdiox
+
+mean_sulphates <- mean(wine_imputed$Sulphates, na.rm=T)
+wine_imputed$Sulphates[is.na(wine_imputed$Sulphates)] <- mean_sulphates
+
+mean_alcohol <- mean(wine_imputed$Alcohol, na.rm=T)
+wine_imputed$Alcohol[is.na(wine_imputed$Alcohol)] <- mean_alcohol
+
+mean_stars <- mean(wine_imputed$STARS, na.rm=T)
+wine_imputed$STARS[is.na(wine_imputed$STARS)] <- mean_stars
+
+
+```
+
