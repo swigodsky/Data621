@@ -11,6 +11,7 @@ output: html_document
 wine <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/wine-training-data.csv", stringsAsFactors = FALSE)
 head(wine)
 #nrow(wine)
+meantarget <- round(mean(wine$TARGET))
 ```
 
 The data set consists of 12,795 records of different wines.  The variables are mostly related to the chemical properties of the wines.  The goal is to use the variables to create a model that predicts the number of cases of that wine that would be purchased by distribution companies.
@@ -46,6 +47,8 @@ correlation <- cor(wine_index_removed, method = "pearson",use="complete.obs")
 #correlation
 corrplot(correlation, type="upper", method="color")
 ```
+
+
 
 
 The target variable is positively correlated with LabelAppeal and STARS.  The target variable is negavitely correlated with VolatileAcidity and Acid Index.
@@ -131,7 +134,7 @@ The distributions for Residual Sugar, Chlorides, FreeSulfurDioxide, TotalSulfurD
 ##DATA PREPARATION
 Because the variables that have missing values are most values near the mean, I will impute the mean for the missing values.
 ```{r impute_mean, echo=FALSE}
-wine_imputed <- wine
+wine_imputed <- wine_index_removed
 
 mean_res_sugar <- mean(wine_imputed$ResidualSugar, na.rm=T)
 wine_imputed$ResidualSugar[is.na(wine_imputed$ResidualSugar)] <- mean_res_sugar
@@ -156,7 +159,236 @@ wine_imputed$Alcohol[is.na(wine_imputed$Alcohol)] <- mean_alcohol
 
 mean_stars <- mean(wine_imputed$STARS, na.rm=T)
 wine_imputed$STARS[is.na(wine_imputed$STARS)] <- mean_stars
+```
 
+To address the correlation between the number of stars and label appeal, I will combine those variables by adding the values together.
+```{r stars_label, echo=FALSE}
+stars_label <- wine_imputed$STARS + wine_imputed$LabelAppeal
+wine_imputed <- cbind(wine_imputed, stars_label)
+wine_imputed <-subset(wine_imputed, select=-c(STARS, LabelAppeal))
+```
+
+##Build Models
+####Creating a Test Set and Training Set
+```{r model1_training_testing, echo=FALSE, cache=TRUE}
+set.seed(15)
+n <- nrow(wine_imputed)
+shuffle_df1 <- wine_imputed[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train1 <- shuffle_df1[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test1 <- shuffle_df1[test_indeces,]
+```
+
+####Backward Elimination - Poisson Regression Model 1
+```{r backward-elimination1, echo=FALSE}
+poisson1 <- glm(TARGET ~ ., data=train1, family="poisson")
+summary(poisson1)
+```
+Residual Sugar has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_res_sugar1, echo=FALSE}
+poisson1 <- update(poisson1, .~. -ResidualSugar, data = train1, family="poisson")
+summary(poisson1)
+```
+
+Citric Acid has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_citricacid1, echo=FALSE}
+poisson1 <- update(poisson1, .~. -CitricAcid, data = train1, family="poisson")
+summary(poisson1)
+```
+
+Fixed Acidity has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_fixedacidity1, echo=FALSE}
+poisson1 <- update(poisson1, .~. -FixedAcidity, data = train1, family="poisson")
+summary(poisson1)
+```
+
+The following variables have a positive effect on the number of cases chosen by distributors to buy: Free Sulfur Dioxide, Total Sulfur Dioxide, Alcohol and the Number of Stars and Label Appeal.
+
+The following variables have a negative effect on the number of cases chosen by distributors to buy: Volatile Acidity, Chlorides, Density, pH, Sulphates, and Acid Index.
+
+```{r fxns, echo=FALSE}
+acc <- function(pred, test){
+  totalnum <- length(pred) 
+  numRight <- length(which(pred==test$TARGET))
+  accuracy <- numRight/totalnum
+  return(accuracy)
+} 
+
+accplusminus1 <- function(pred, test){
+  totalnum <- length(pred) 
+  numRightish <- length(which(pred==test$TARGET+1|pred==test$TARGET-1|pred==test$TARGET))
+  accuracy1 <- numRightish/totalnum
+  return(accuracy1)
+} 
+
+err <- function(pred, test){
+  totalnum <- length(pred) 
+  numWrong <- length(which(pred!=test$TARGET))
+  error <- numWrong/totalnum
+  return(error)
+} 
 
 ```
 
+####Prediction from Poisson Model 1
+
+```{r pred_model1, echo=FALSE}
+
+pred_p1 <- predict(poisson1, newdata=test1, type="response")
+pred_p1 <- round(pred_p1)
+table(pred=pred_p1, true=test1$TARGET)
+accuracy <- acc(pred_p1,test1)
+print(accuracy)
+print(accplusminus1(pred_p1,test1))
+```
+
+Model 1 predicts the number of cases of wine bought 25% of the time.  Model 1 predicts the number of cases within 1 64% of the time.  
+
+```{r rmes1, echo=FALSE}
+error1 <- pred_p1-test1$TARGET
+rmse1 <- sqrt(mean(error1^2))
+rmse1
+```
+On average, the predicion for the number of cases of wine purchased, is off by 1.6 cases.
+
+###Model 2 - Negative Binomial Regression 
+To build a second model, I will start with only the variables that displayed correlation with the target variable.
+
+```{r model2, echo=FALSE}
+wine2 <- wine_index_removed
+wine2 <- subset(wine2, select=c(TARGET,VolatileAcidity, Chlorides,Density,Sulphates,Alcohol, AcidIndex,STARS, LabelAppeal))
+```
+
+
+####Creating a Test Set and Training Set
+```{r model1_training_testing, echo=FALSE, cache=TRUE}
+set.seed(15)
+n <- nrow(wine2)
+shuffle_df2 <- wine2[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train2 <- shuffle_df2[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test2 <- shuffle_df2[test_indeces,]
+```
+
+```{r backward-elimination2, echo=FALSE}
+library(MASS)
+nb2 <- glm.nb(TARGET ~ ., data=train2)
+summary(nb2)
+```
+
+Residual Sugar has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_sulphates2, echo=FALSE}
+nb2 <- update(nb2, .~. -Sulphates, data = train2)
+summary(nb2)
+```
+
+Density has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_density2, echo=FALSE}
+nb2 <- update(nb2, .~. -Density, data = train2)
+summary(nb2)
+```
+
+Fixed Acidity has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_chlorides2, echo=FALSE}
+nb2 <- update(nb2, .~. -Chlorides, data = train2)
+summary(nb2)
+```
+
+The following variables have a positive impact on the number of cases of wine bought: alcohol, stars and label appeal.
+The following variables have a negative impact on the number of cases of wine bought: volatile acidity and acid index.
+
+####Prediction from Negative Binomial Regression- Model 2
+Any values that are not predicted by the model, will be imputed to be the mean of the number of cases bought.
+```{r pred_model2, echo=FALSE}
+
+pred_nb2 <- predict(nb2, newdata=test2, type="response")
+pred_nb2[is.na(pred_nb2)] <- meantarget
+pred_nb2 <- round(pred_nb2)
+table(pred=pred_nb2, true=test2$TARGET)
+accuracy <- acc(pred_nb2,test2)
+print(accuracy)
+print(accplusminus1(pred_nb2,test2))
+```
+
+This model predicts the number of cases purchased 33% of the time.  This model predicts the number of cases bought within 1, 70% of the time.
+
+
+```{r rmes2, echo=FALSE}
+error2 <- pred_nb2-test2$TARGET
+rmse2 <- sqrt(mean(error2^2))
+rmse2
+```
+On average, the predicion for the number of cases of wine purchased, is off by 1.6 cases.
+
+
+####Multiple Linear Regression Model - Model 3
+I will build model 3 using the same data set as model 2, but I will combine the variables stars and label appeal by adding them.
+```{r model3, echo=FALSE}
+wine3 <- wine2
+stars_label <- wine3$STARS + wine3$LabelAppeal
+wine3 <- cbind(wine3, stars_label)
+wine3 <-subset(wine3, select=-c(STARS, LabelAppeal))
+```
+
+####Creating a Test Set and Training Set
+```{r model1_training_testing, echo=FALSE, cache=TRUE}
+set.seed(15)
+n <- nrow(wine3)
+shuffle_df3 <- wine3[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train3 <- shuffle_df3[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test3 <- shuffle_df3[test_indeces,]
+```
+
+####Backward Elimination
+```{r backward-elimination3, echo=FALSE}
+lm3 <- lm(train3$TARGET ~., data=train3)
+summary(lm3)
+```
+
+Sulphates has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_sulphates3, echo=FALSE}
+lm3 <- update(lm3, .~. -Sulphates, data = train3)
+summary(lm3)
+```
+
+Density has the (highest p value) lowest affect on the target and will be removed next.  
+```{r remove_density3, echo=FALSE}
+lm3 <- update(lm3, .~. -Density, data = train3)
+summary(lm3)
+```
+
+```{r res3, echo=FALSE}
+plot(fitted(lm3),resid(lm3))
+qqnorm(resid(lm3))
+qqline(resid(lm3))
+```
+
+####Prediction from Model 3
+If the model does not predict a value for the TARGET, I will impute the mean value for the target.
+The root mean square error from model 3 is
+```{r rmse3, echo=FALSE}
+pred3 <- predict(lm3, newdata=test3, type="response")
+pred3[pred3<0]<-0
+pred3[is.na(pred3)] <- meantarget
+pred3 <- round(pred3)
+error <- pred3-test3$TARGET
+head(pred3)
+rmse3 <- sqrt(mean(error^2))
+rmse3
+```
+
+On average, the predicion for the number of cases of wine purchased, is off by 1.6 cases.
+
+
+```{r pred_model3, echo=FALSE}
+table(pred=pred3, true=test3$TARGET)
+accuracy <- acc(pred3,test3)
+print(accuracy)
+print(accplusminus1(pred3,test3))
+```
+
+The model predicts the correct number of cases bought 33% of the time.  The model is off by 1 case 70% of the time.
