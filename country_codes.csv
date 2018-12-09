@@ -8,19 +8,19 @@ order,country_code,name,country_number,region_num,region
 7,AND,Andorra,20,5,europe
 8,ANT,Netherlands Antilles,0,2,caribbean
 9,ARE,United Arab Emirates,784,8,middle_east
-10,ARG,Argentina,32,11,south_america
+10,ARG,Argentina,32,12,south_america
 11,ARM,Armenia,51,1,asia
-12,ASM,American Samoa,16,10,oceania
+12,ASM,American Samoa,16,11,oceania
 13,ATA,Antarctica,10,0,antarctica
 14,ATF,French Southern Territories,260,0,antarctica
 15,ATG,Antigua and Barbuda,28,2,caribbean
-16,AUS,Australia,36,10,oceania
+16,AUS,Australia,36,11,oceania
 17,AUT,Austria,40,6,european_union
 18,AZE,Azerbaijan,31,1,asia
 19,BDI,Burundi,108,4,eastern_africa
 20,BEL,Belgium,56,6,european_union
-21,BEN,Benin,204,13,western_africa
-22,BFA,Burkina Faso,854,13,western_africa
+21,BEN,Benin,204,14,western_africa
+22,BFA,Burkina Faso,854,14,western_africa
 23,BGD,Bangladesh,50,1,asia
 24,BGR,Bulgaria,100,6,european_union
 25,BHR,Bahrain,48,8,middle_east
@@ -30,25 +30,25 @@ order,country_code,name,country_number,region_num,region
 29,BLR,Belarus,112,5,europe
 30,BLZ,Belize,84,3,central_america
 31,BMU,Bermuda,60,9,north_america
-32,BOL,Bolivia,68,11,south_america
-33,BRA,Brazil,76,11,south_america
+32,BOL,Bolivia,68,12,south_america
+33,BRA,Brazil,76,12,south_america
 34,BRB,Barbados,52,2,caribbean
 35,BRN,Brunei Darussalam,96,1,asia
 36,BTN,Bhutan,64,1,asia
-38,BWA,Botswana,72,12,southern_africa
+38,BWA,Botswana,72,13,southern_africa
 39,CAF,Central African Republic,140,7,middle_africa
 40,CAN,Canada,124,9,north_america
 42,CHE,Switzerland,756,5,europe
-43,CHL,Chile,152,11,south_america
+43,CHL,Chile,152,12,south_america
 44,CHN,China,156,1,asia
-45,CIV,Cote d'Ivoire,384,13,western_africa
+45,CIV,Cote d'Ivoire,384,14,western_africa
 46,CMR,Cameroon,120,7,middle_africa
 47,COD,Congo,180,7,middle_africa
 48,COG,Congo,178,7,middle_africa
-49,COK,Cook Islands,184,10,oceania
-50,COL,Colombia,170,11,south_america
+49,COK,Cook Islands,184,11,oceania
+50,COL,Colombia,170,12,south_america
 51,COM,Comoros,174,4,eastern_africa
-52,CPV,Cape Verde,132,13,western_africa
+52,CPV,Cape Verde,132,14,western_africa
 53,CRI,Costa Rica,188,3,central_america
 54,CUB,Cuba,192,2,caribbean
 56,CYM,Cayman Islands,136,2,caribbean
@@ -59,37 +59,37 @@ order,country_code,name,country_number,region_num,region
 61,DMA,Dominica,212,2,caribbean
 62,DNK,Denmark,208,6,european_union
 63,DOM,Dominican Republic,214,2,caribbean
-64,DZA,Algeria,12,9,northern_africa
-65,ECU,Ecuador,218,11,south_america
-66,EGY,Egypt,818,9,northern_africa
+64,DZA,Algeria,12,10,northern_africa
+65,ECU,Ecuador,218,12,south_america
+66,EGY,Egypt,818,10,northern_africa
 67,ERI,Eritrea,232,4,eastern_africa
-68,ESH,Western Sahara,732,13,western_africa
+68,ESH,Western Sahara,732,14,western_africa
 69,ESP,Spain,724,6,european_union
 70,EST,Estonia,233,6,european_union
 71,ETH,Ethiopia,231,4,eastern_africa
 72,FIN,Finland,246,6,european_union
-73,FJI,Fiji,242,10,oceania
-74,FLK,Falkland Islands (Malvinas),238,11,south_america
+73,FJI,Fiji,242,11,oceania
+74,FLK,Falkland Islands (Malvinas),238,12,south_america
 75,FRA,France,250,6,european_union
 76,FRO,Faroe Islands,234,5,europe
-77,FSM,Micronesia,583,10,oceania
+77,FSM,Micronesia,583,11,oceania
 78,GAB,Gabon,266,7,middle_africa
 79,GBR,United Kingdom,826,6,european_union
 80,GEO,Georgia,268,1,asia
-82,GHA,Ghana,288,13,western_africa
+82,GHA,Ghana,288,14,western_africa
 83,GIB,Gibraltar,292,5,europe
-84,GIN,Guinea,324,13,western_africa
+84,GIN,Guinea,324,14,western_africa
 85,GLP,Guadeloupe,312,2,caribbean
-86,GMB,Gambia,270,13,western_africa
-87,GNB,Guinea-Bissau,624,13,western_africa
+86,GMB,Gambia,270,14,western_africa
+87,GNB,Guinea-Bissau,624,14,western_africa
 88,GNQ,Equatorial Guinea,226,7,middle_africa
 89,GRC,Greece,300,6,european_union
 90,GRD,Grenada,308,2,caribbean
 91,GRL,Greenland,304,9,north_america
 92,GTM,Guatemala,320,3,central_america
-93,GUF,French Guiana,254,11,south_america
-94,GUM,Guam,316,10,oceania
-95,GUY,Guyana,328,11,south_america
+93,GUF,French Guiana,254,12,south_america
+94,GUM,Guam,316,11,oceania
+95,GUY,Guyana,328,12,south_america
 96,HKG,Hong Kong,344,1,asia
 98,HND,Honduras,340,3,central_america
 99,HRV,Croatia,191,5,europe
@@ -112,126 +112,126 @@ order,country_code,name,country_number,region_num,region
 117,KEN,Kenya,404,4,eastern_africa
 118,KGZ,Kyrgyzstan,417,1,asia
 119,KHM,Cambodia,116,1,asia
-120,KIR,Kiribati,296,10,oceania
+120,KIR,Kiribati,296,11,oceania
 121,KNA,Saint Kitts and Nevis,659,2,caribbean
 122,KOR,Korea,410,1,asia
 123,KWT,Kuwait,414,8,middle_east
 124,LAO,Lao People's Democratic Republic,418,1,asia
 125,LBN,Lebanon,422,8,middle_east
-126,LBR,Liberia,430,13,western_africa
-127,LBY,Libyan Arab Jamahiriya,434,9,northern_africa
+126,LBR,Liberia,430,14,western_africa
+127,LBY,Libyan Arab Jamahiriya,434,10,northern_africa
 128,LCA,Saint Lucia,662,2,caribbean
 129,LIE,Liechtenstein,438,5,europe
 130,LKA,Sri Lanka,144,1,asia
-131,LSO,Lesotho,426,12,southern_africa
+131,LSO,Lesotho,426,13,southern_africa
 132,LTU,Lithuania,440,6,european_union
 133,LUX,Luxembourg,442,6,european_union
 134,LVA,Latvia,428,6,european_union
 135,MAC,Macao,446,1,asia
 136,MAF,Saint Martin (French part),663,2,caribbean
-137,MAR,Morocco,504,9,northern_africa
+137,MAR,Morocco,504,10,northern_africa
 138,MCO,Monaco,492,5,europe
 139,MDA,Moldova,498,5,europe
 140,MDG,Madagascar,450,4,eastern_africa
 141,MDV,Maldives,462,1,asia
 142,MEX,Mexico,484,3,central_america
-143,MHL,Marshall Islands,584,10,oceania
+143,MHL,Marshall Islands,584,11,oceania
 144,MKD,Macedonia,807,5,europe
-145,MLI,Mali,466,13,western_africa
+145,MLI,Mali,466,14,western_africa
 146,MLT,Malta,470,6,european_union
 147,MMR,Myanmar,104,1,asia
 148,MNE,Montenegro,499,5,europe
 149,MNG,Mongolia,496,1,asia
 151,MOZ,Mozambique,508,4,eastern_africa
-152,MRT,Mauritania,478,13,western_africa
+152,MRT,Mauritania,478,14,western_africa
 153,MSR,Montserrat,500,2,caribbean
 154,MTQ,Martinique,474,2,caribbean
 155,MUS,Mauritius,480,4,eastern_africa
 156,MWI,Malawi,454,4,eastern_africa
 157,MYS,Malaysia,458,1,asia
 158,MYT,Mayotte,175,4,eastern_africa
-159,NAM,Namibia,516,12,southern_africa
-160,NCL,New Caledonia,540,10,oceania
-161,NER,Niger,562,13,western_africa
-162,NFK,Norfolk Island,574,10,oceania
-163,NGA,Nigeria,566,13,western_africa
+159,NAM,Namibia,516,13,southern_africa
+160,NCL,New Caledonia,540,11,oceania
+161,NER,Niger,562,14,western_africa
+162,NFK,Norfolk Island,574,11,oceania
+163,NGA,Nigeria,566,14,western_africa
 164,NIC,Nicaragua,558,3,central_america
-165,NIU,Niue,570,10,oceania
+165,NIU,Niue,570,11,oceania
 166,NLD,Netherlands,528,6,european_union
 167,NOR,Norway,578,5,europe
 168,NPL,Nepal,524,1,asia
 169,NRU,Nauru,520,1,asia
-170,NZL,New Zealand,554,10,oceania
+170,NZL,New Zealand,554,11,oceania
 171,OMN,Oman,512,8,middle_east
 172,PAK,Pakistan,586,1,asia
 173,PAN,Panama,591,3,central_america
-174,PCN,Pitcairn,612,10,oceania
-175,PER,Peru,604,11,south_america
+174,PCN,Pitcairn,612,11,oceania
+175,PER,Peru,604,12,south_america
 176,PHL,Philippines,608,1,asia
 177,PLW,Palau,585,1,asia
-178,PNG,Papua New Guinea,598,10,oceania
+178,PNG,Papua New Guinea,598,11,oceania
 179,POL,Poland,616,6,european_union
 180,PRI,Puerto Rico,630,2,caribbean
 181,PRK,Korea,408,1,asia
 182,PRT,Portugal,620,6,european_union
-183,PRY,Paraguay,600,11,south_america
+183,PRY,Paraguay,600,12,south_america
 184,PSE,Palestinian Territory,0,8,middle_east
-185,PYF,French Polynesia,258,10,oceania
+185,PYF,French Polynesia,258,11,oceania
 186,QAT,Qatar,634,8,middle_east
 187,REU,Reunion,638,4,eastern_africa
 188,ROU,Romania,642,6,european_union
 189,RUS,Russian Federation,643,5,europe
 190,RWA,Rwanda,646,4,eastern_africa
 191,SAU,Saudi Arabia,682,8,middle_east
-192,SDN,Sudan,729,9,northern_africa
-193,SEN,Senegal,686,13,western_africa
+192,SDN,Sudan,729,10,northern_africa
+193,SEN,Senegal,686,14,western_africa
 194,SGP,Singapore,702,1,asia
-196,SHN,Saint Helena,0,13,western_africa
+196,SHN,Saint Helena,0,14,western_africa
 197,SJM,Svalbard and Jan Mayen,744,5,europe
-198,SLB,Solomon Islands,90,10,oceania
-199,SLE,Sierra Leone,694,13,western_africa
+198,SLB,Solomon Islands,90,11,oceania
+199,SLE,Sierra Leone,694,14,western_africa
 200,SLV,El Salvador,222,3,central_america
 201,SMR,San Marino,674,5,europe
 202,SOM,Somalia,706,4,eastern_africa
 203,SPM,Saint Pierre and Miquelon,666,9,north_america
 204,SRB,Serbia,688,5,europe
 205,STP,Sao Tome and Principe,678,7,middle_africa
-206,SUR,Suriname,740,11,south_america
+206,SUR,Suriname,740,12,south_america
 207,SVK,Slovakia,703,6,european_union
 208,SVN,Slovenia,705,6,european_union
 209,SWE,Sweden,752,6,european_union
-210,SWZ,Swaziland,748,12,southern_africa
+210,SWZ,Swaziland,748,13,southern_africa
 211,SYC,Seychelles,690,4,eastern_africa
 212,SYR,Syrian Arab Republic,760,8,middle_east
 213,TCA,Turks and Caicos Islands,796,2,caribbean
 214,TCD,Chad,148,7,middle_africa
-215,TGO,Togo,768,13,western_africa
+215,TGO,Togo,768,14,western_africa
 216,THA,Thailand,764,1,asia
 217,TJK,Tajikistan,762,1,asia
 219,TKM,Turkmenistan,795,1,asia
 220,TLS,Timor-Leste,626,1,asia
-221,TON,Tonga,776,10,oceania
+221,TON,Tonga,776,11,oceania
 222,TTO,Trinidad and Tobago,780,2,caribbean
-223,TUN,Tunisia,788,9,northern_africa
+223,TUN,Tunisia,788,10,northern_africa
 224,TUR,Turkey,792,5,europe
 225,TUV,Tuvalu,798,1,asia
 226,TWN,Taiwan,0,1,asia
 227,TZA,Tanzania,0,4,eastern_africa
 228,UGA,Uganda,800,4,eastern_africa
 229,UKR,Ukraine,804,5,europe
-231,URY,Uruguay,858,11,south_america
+231,URY,Uruguay,858,12,south_america
 232,USA,United States,840,9,north_america
 233,UZB,Uzbekistan,860,1,asia
 234,VAT,Holy See (Vatican City State),336,5,europe
 235,VCT,Saint Vincent and the Grenadines,670,2,caribbean
-236,VEN,Venezuela,862,11,south_america
+236,VEN,Venezuela,862,12,south_america
 237,VGB,Virgin Islands,92,2,caribbean
 238,VIR,Virgin Islands,850,2,caribbean
 239,VNM,Viet Nam,704,1,asia
-240,VUT,Vanuatu,548,10,oceania
-241,WLF,Wallis and Futuna,876,10,oceania
-242,WSM,Samoa,882,10,oceania
+240,VUT,Vanuatu,548,11,oceania
+241,WLF,Wallis and Futuna,876,11,oceania
+242,WSM,Samoa,882,11,oceania
 243,YEM,Yemen,887,8,middle_east
-244,ZAF,South Africa,710,12,southern_africa
+244,ZAF,South Africa,710,13,southern_africa
 245,ZMB,Zambia,894,4,eastern_africa
 246,ZWE,Zimbabwe,716,4,eastern_africa
