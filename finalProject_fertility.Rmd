@@ -1,0 +1,223 @@
+---
+title: "Final Project DATA 621"
+author: "Sarah Wigodsky"
+date: "December 8, 2018"
+output: html_document
+---
+
+
+##DATA EXPLORATION
+
+```{r install_libraries, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyr)
+library(dplyr)
+library(corrplot)
+library(ggplot2)
+```
+
+
+```{r load_data, echo=FALSE, warning=FALSE, message=FALSE}
+fertility <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/fertility_rate_predictionUN.csv", stringsAsFactors = FALSE)
+country_code_df <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/country_codes.csv", stringsAsFactors = TRUE)
+country_code_df$region_num <- as.factor(country_code_df$region_num)
+fertility <- left_join(fertility,country_code_df,by="country_code")
+fertility <- subset(fertility, select=-c(order,country_code,country_number))
+
+head(fertility)
+nrow(fertility)
+```
+
+The data set consists of 214 rows, where each row represents the data from a different country.  We aim to build a model to predict the fertility rate, which is defined as the number of children per woman in a country.  The variables we will use to create a model are:
+
+  - carbon_dioxide_emissions - carbon dioxide emissions in kilotonnes
+  - cell_subs_per_100 - Cell subscriptions per 100 population(2014)
+  - employment_to_pop_ratio - employment to total population ratio
+  - female_employment_to_pop_ratio - female employee to population ratio
+  - lowest_quint_income_share - poorest quintile's share in income
+  - maternal_mortality - maternal mortality per 100,000 live births
+  - percent_children_malaria_nets - Children sleeping under insecticide-treated bed nets
+  - unmet_family_planning_need -percent unmet family planning need
+  - urban_pop_in_slums - percent urban population living in slums
+  - women_men_literacy_ratio - Women to men parity index, as ratio of literacy rates
+  - net_migration_per_1000 - Net migration rate per 1000
+  - region_num - Number that signifies the region the country resides in
+      0 - Antarctica
+      1 - Asia
+      2 - Caribbean
+      3 - Central America
+      4 - Eastern Africa
+      5 - Europe
+      6 - European Union
+      7 - Middle Africa
+      8 - Middle East
+      9 - North America
+      10 - Northern Africa
+      11 - Oceania
+      12 - South America
+      13 - South Africa
+      14 - Western Africa
+      
+      The characterizations of the regions was taken from https://internetworldstats.com/list1.htm
+  
+```{r summary_stats, echo=FALSE}
+summary(fertility)
+```
+
+Finding the number of countries in each region
+```{r countries_per_region, echo=FALSE}
+country_per_region <- fertility
+country_per_region <- country_per_region %>%
+  select(region_num,region)
+country_per_region <- as.data.frame(table(country_per_region$region_num))
+colnames(country_per_region) <- c("region_num","NumCountriesPerRegion")
+country_per_region
+```
+
+A challenge of the data set is the large number of missing values.  Carbon dioxide emissions is missing 172 values, cell subscriptions per 100 population is missing 12 values, employment to population ratio is missing 107 vaues, female employment to population ratio is missing 111 values, lowest quintile share in income is missing 190 values, maternal mortality per 100,000 live births is missing 139 values, percent of children sleeping under insecticide treated bed nets is missing 155 values, unmet family planning need is missing 78 values, precentage of urban population living in slums in missing 133 values, the literacy ratio between women to men is missing 146 values, the net mirgration per 1000 is missing 20 values.
+
+####Percent of Children Sleeping Under Insecticide Treated Bed Nets
+There are 155 missing values.  We will investigate if many of these values are likely to be zero.  We will look at the relationship between this variable and region number.
+```{r bed_nets_region_num, echo=FALSE}
+bed_nets_region <- fertility
+bed_nets_region <- bed_nets_region %>%
+  filter(is.na(percent_children_malaria_nets)) %>%
+  select(region_num)
+
+count_na_by_region <- as.data.frame(table(bed_nets_region$region_num))
+colnames(count_na_by_region) <- c("region_num","Freq")
+count_na_by_region <- count_na_by_region %>%
+  left_join(country_code_df,by="region_num") %>%
+  left_join(country_per_region,by="region_num") %>%
+  select(region_num,region,Freq,NumCountriesPerRegion) %>%
+  mutate(NumCountriesNA=Freq) %>%
+  mutate(NumCountriesPerRegion=NumCountriesPerRegion) %>%
+  mutate(PerentageCountriesInRegion=Freq*100/NumCountriesPerRegion) %>%
+  distinct(region_num, region, NumCountriesNA,NumCountriesPerRegion, PerentageCountriesInRegion)
+count_na_by_region
+```
+
+The data table above displays the percentage of countries in each region that are missing values for the percentage of children sleeping under insecticide treated bed nets.  Next we will calculate the average values for the percentage of children sleeping under insecticide treated bed nets in each region.
+
+
+```{r avg_bed_nets, echo=FALSE}
+bed_nets_region_avg <- fertility
+bed_nets_region_avg <- bed_nets_region_avg %>%
+  filter((percent_children_malaria_nets>=0)) %>%
+  select(region_num,region,percent_children_malaria_nets) %>%
+  group_by(region_num) %>%
+  mutate(AvgBedNetsInRegion=mean(percent_children_malaria_nets)) %>%
+  distinct(region_num, region, AvgBedNetsInRegion)
+bed_nets_region_avg
+```
+
+We will assume that countries that have missing data for percentage of children sleeping under insecticide treated nets, have a percentage of zero and we will impute zero for the missing values.
+
+```{r impute_zero_nets, echo=FALSE}
+fertility$percent_children_malaria_nets[is.na(fertility$percent_children_malaria_nets)] <- 0
+```
+
+####Exploring Carbon Dioxide Emissions
+```{r co2, echo=FALSE}
+plot(fertility$carbon_dioxide_emissions, ylab="Carbon Dioxide Emissions")
+hist(fertility$carbon_dioxide_emissions, xlab="Carbon Dioxide Emissions",main="Histogram of Carbon Dioxide Emissions")
+boxplot(fertility$carbon_dioxide_emissions, main="Carbon Dioxide Emissions")
+filter(fertility, carbon_dioxide_emissions>4000000)
+```
+
+There are 172 missing values for carbon dioxide emissions.  Of the data that is present, most is between 0 and 1,000,000 kilotonnes.  The United States is a outlier with a very high emission value.  This value does not take into account the size of the country or population.  Imputing values presents a signficant challenge for this reason as well as the variation between country's emissions that depends on their development and committment to environmental action. To address this, we will impute missing data by using values reported by the Guardian in 2011.  The data can be found here:
+https://www.theguardian.com/news/datablog/2011/jan/31/world-carbon-dioxide-emissions-country-data-co2
+
+```{r guardianCO2, echo=FALSE, message=FALSE,warning=FALSE}
+guardianCO2 <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/co2emissions.csv", stringsAsFactors = FALSE)
+fertility <- fertility %>%
+  left_join(guardianCO2, by ="name")
+fertility$carbon_dioxide_emissions[is.na(fertility$carbon_dioxide_emissions)] <- fertility$co2Guardian
+fertility <- subset(fertility, select=-c(emissions,co2Guardian))
+summary(fertility$carbon_dioxide_emissions)
+```
+
+```{r co22, echo=FALSE}
+plot(fertility$carbon_dioxide_emissions, ylab="Carbon Dioxide Emissions")
+hist(fertility$carbon_dioxide_emissions, xlab="Carbon Dioxide Emissions",main="Histogram of Carbon Dioxide Emissions")
+boxplot(fertility$carbon_dioxide_emissions, main="Carbon Dioxide Emissions")
+```
+
+Now there are only 18 missing values for CO2 emissions.  Because of the extent to which outliers will increase the mean, we will impute the median for missing values of CO2 emissions.
+
+```{r medco2,echo=FALSE}
+medianCO2 <- median(fertility$carbon_dioxide_emissions,na.rm=TRUE)
+fertility$carbon_dioxide_emissions[is.na(fertility$carbon_dioxide_emissions)] <- medianCO2
+```
+
+####Exploring Cell Subscriptions per 100 Population
+```{r cellSubs, echo=FALSE,message=FALSE,warning=FALSE}
+plot(fertility$cell_subs_per_100, ylab="Cell Subscriptions per 100 Population")
+hist(fertility$cell_subs_per_100, xlab="Cell Subscriptions per 100 Population",main="Histogram of Cell Subscriptions per 100 Population")
+boxplot(fertility$cell_subs_per_100, main="Cell Subscriptions per 100 Population")
+ggplot(fertility, aes(x=region,y=cell_subs_per_100)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+```
+ 
+The median and mean of cell subscriptions per 100 population are about the same.  However when exploring the variation by region, there are more noticable differences.  There are few outliers.  We will impute the appropriate region's median for the 18 missing values.
+
+```{r medcell,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_cell=median(cell_subs_per_100))
+fertility$cell_subs_per_100[is.na(fertility$cell_subs_per_100)] <- fertility$med_cell
+fertility = subset(fertility, select=-c(med_cell))
+```
+
+####Exploring Employment to Population Ratio
+```{r emplypop, echo=FALSE, message=FALSE}
+plot(fertility$employment_to_pop_ratio, ylab="Employment to Population Ratio")
+hist(fertility$employment_to_pop_ratio, xlab="Employment to Population Ratio",main="Histogram of Employment to Population Ratio")
+boxplot(fertility$employment_to_pop_ratio, main="Employment to Population Ratio")
+ggplot(fertility, aes(x=region,y=employment_to_pop_ratio)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+```
+ 
+ The employment to population value varies dramatically by region.  We will impute the median for the employment to population ratio per region for the missing values.
+
+```{r medemploy,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_employ=median(employment_to_pop_ratio))
+fertility$employment_to_pop_ratio[is.na(fertility$employment_to_pop_ratio)] <- fertility$med_employ
+fertility = subset(fertility, select=-c(med_employ))
+``` 
+
+####Exploring Female Employment to Population Ratio
+```{r fememplypop, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$female_employment_to_pop_ratio, ylab="Female Employment to Population Ratio")
+hist(fertility$female_employment_to_pop_ratio, xlab="Female Employment to Population Ratio",main="Histogram of Female Employment to Population Ratio")
+boxplot(fertility$female_employment_to_pop_ratio, main="Female Employment to Population Ratio")
+ggplot(fertility, aes(x=region,y=female_employment_to_pop_ratio)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+```
+ 
+There are 111 missing values.  The female employment to population value varies dramatically by region.  We will impute the median for the female employment to population ratio per region for the missing values.
+
+```{r medfem_employ,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_fem_employ=median(female_employment_to_pop_ratio))
+fertility$female_employment_to_pop_ratio[is.na(fertility$female_employment_to_pop_ratio)] <- fertility$med_fem_employ
+fertility = subset(fertility, select=-c(med_fem_employ))
+```  
+ 
+####Exploring Lowest Quintile Income Share
+```{r lowquint, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$lowest_quint_income_share.csv, ylab="Poorest Quintile's Share in Income")
+hist(fertility$lowest_quint_income_share.csv, xlab="Poorest Quintile's Share in Income",main="Histogram of Poorest Quintile's Share in Income")
+boxplot(fertility$lowest_quint_income_share.csv, main="Poorest Quintile's Share in Income")
+ggplot(fertility, aes(x=region,y=lowest_quint_income_share.csv)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+```
+ 
+There are 190 missing values.  There are so many missing values that there is not a meaningful way to impute missing values.  We will therefore remove this column.
+
+```{r remove_lowest_quint,echo=FALSE, message=FALSE,warning=FALSE}
+fertility = subset(fertility, select=-c(lowest_quint_income_share.csv))
+```  
+ 
+```{r correlation, echo=FALSE, fig.width=10, message=FALSE}
+# <- cor(fertility, method = "pearson",use="complete.obs")
+#corrplot(correlation, type="upper", method="color")
+```
