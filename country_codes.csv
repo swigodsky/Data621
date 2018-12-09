@@ -3,7 +3,7 @@ order,three_letter,name,country_number,region_num,region
 2,AFG,Afghanistan,4,1,asia
 3,AGO,Angola,24,7,middle_africa
 4,AIA,Anguilla,660,2,caribbean
-5,ALA,Åland Islands,248,6,european_union
+5,ALA,Aland Islands,248,6,european_union
 6,ALB,Albania,8,5,europe
 7,AND,Andorra,20,5,europe
 8,ANT,Netherlands Antilles,0,2,caribbean
@@ -26,7 +26,7 @@ order,three_letter,name,country_number,region_num,region
 25,BHR,Bahrain,48,8,middle_east
 26,BHS,Bahamas,44,2,caribbean
 27,BIH,Bosnia and Herzegovina,70,5,europe
-28,BLM,Saint Barthélemy,652,2,caribbean
+28,BLM,Saint Barthelemy,652,2,caribbean
 29,BLR,Belarus,112,5,europe
 30,BLZ,Belize,84,3,central_america
 31,BMU,Bermuda,60,9,north_america
@@ -41,7 +41,7 @@ order,three_letter,name,country_number,region_num,region
 42,CHE,Switzerland,756,5,europe
 43,CHL,Chile,152,11,south_america
 44,CHN,China,156,1,asia
-45,CIV,Côte d'Ivoire,384,13,western_africa
+45,CIV,Cote d'Ivoire,384,13,western_africa
 46,CMR,Cameroon,120,7,middle_africa
 47,COD,Congo,180,7,middle_africa
 48,COG,Congo,178,7,middle_africa
@@ -178,7 +178,7 @@ order,three_letter,name,country_number,region_num,region
 184,PSE,Palestinian Territory,0,8,middle_east
 185,PYF,French Polynesia,258,10,oceania
 186,QAT,Qatar,634,8,middle_east
-187,REU,Réunion,638,4,eastern_africa
+187,REU,Reunion,638,4,eastern_africa
 188,ROU,Romania,642,6,european_union
 189,RUS,Russian Federation,643,5,europe
 190,RWA,Rwanda,646,4,eastern_africa
