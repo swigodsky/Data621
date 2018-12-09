@@ -1,4 +1,4 @@
-order,three_letter,name,country_number,region_num,region
+order,country_code,name,country_number,region_num,region
 1,ABW,Aruba,533,2,caribbean
 2,AFG,Afghanistan,4,1,asia
 3,AGO,Angola,24,7,middle_africa
