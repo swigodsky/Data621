@@ -1,0 +1,224 @@
+Country,emissions,carbon_dioxide_emissions
+China,7710.50,7710500
+North America,6410.54,6410540
+United States,5424.53,5424530
+Europe,4310.30,4310300
+Eurasia,2358.03,2358030
+Middle East,1714.09,1714090
+India,1602.12,1602120
+Russia,1572.07,1572070
+Central & South America,1219.78,1219780
+Africa,1121.59,1121590
+Japan,1097.96,1097960
+Germany,765.56,765560
+Canada,540.97,540970
+"Korea, South",528.13,528130
+Iran,527.18,527180
+United Kingdom,519.94,519940
+Saudi Arabia,470.00,470000
+South Africa,450.44,450440
+Mexico,443.61,443610
+Brazil,420.16,420160
+Australia,417.68,417680
+Indonesia,413.29,413290
+Italy,407.87,407870
+France,396.65,396650
+Spain,329.86,329860
+Taiwan,290.88,290880
+Poland,285.79,285790
+Ukraine,255.07,255070
+Thailand,253.38,253380
+Turkey,253.06,253060
+Netherlands,248.91,248910
+United Arab Emirates,193.43,193430
+Egypt,192.38,192380
+Kazakhstan,185.06,185060
+Argentina,166.92,166920
+Venezuela,161.96,161960
+Singapore,161.12,161120
+Malaysia,148.01,148010
+Pakistan,140.29,140290
+Belgium,137.36,137360
+Uzbekistan,115.16,115160
+Algeria,113.92,113920
+Iraq,103.70,103700
+Greece,100.37,100370
+Vietnam,98.76,98760
+Czech Republic,95.32,95320
+Hong Kong,85.98,85980
+Kuwait,84.87,84870
+Romania,80.52,80520
+"Korea, North",79.55,79550
+Nigeria,77.75,77750
+Philippines,72.39,72390
+Israel,70.48,70480
+Colombia,70.15,70150
+Austria,69.24,69240
+Qatar,66.52,66520
+Chile,65.70,65700
+Belarus,60.57,60570
+Syria,56.88,56880
+Turkmenistan,56.78,56780
+Portugal,56.55,56550
+Bangladesh,55.13,55130
+Libya,55.03,55030
+Serbia,52.33,52330
+Finland,52.15,52150
+Sweden,50.56,50560
+Hungary,50.03,50030
+Denmark,49.56,49560
+Oman,48.96,48960
+Trinidad and Tobago,47.82,47820
+Switzerland,45.81,45810
+Bulgaria,44.46,44460
+Ireland,40.27,40270
+Norway,39.58,39580
+New Zealand,39.07,39070
+Peru,38.19,38190
+Morocco,36.49,36490
+Azerbaijan,36.16,36160
+Slovakia,35.75,35750
+Puerto Rico,33.26,33260
+Bahrain,31.10,31100
+Cuba,30.37,30370
+Ecuador,28.71,28710
+Angola,24.00,24000
+Yemen,22.92,22920
+Tunisia,22.90,22900
+Croatia,21.54,21540
+Jordan,20.02,20020
+Dominican Republic,19.86,19860
+Bosnia and Herzegovina,18.35,18350
+Estonia,17.49,17490
+Slovenia,17.37,17370
+Lithuania,15.75,15750
+Panama,15.46,15460
+Lebanon,14.84,14840
+Bolivia,13.89,13890
+Sudan,13.04,13040
+Sri Lanka,12.76,12760
+Burma,12.54,12540
+"Virgin Islands,  U.S.",12.49,12490
+Jamaica,12.11,12110
+Netherlands Antilles,11.64,11640
+Kenya,11.50,11500
+Guatemala,11.30,11300
+Armenia,11.23,11230
+Zimbabwe,10.61,10610
+Luxembourg,10.58,10580
+Cyprus,9.42,9420
+Latvia,8.53,8530
+Ghana,8.11,8110
+Honduras,7.94,7940
+Brunei,7.58,7580
+Cameroon,7.48,7480
+Mongolia,7.36,7360
+Macedonia,7.34,7340
+Uruguay,7.24,7240
+Moldova,7.05,7050
+Ethiopia,6.88,6880
+Costa Rica,6.83,6830
+Tanzania,6.69,6690
+Cote dIvoire (IvoryCoast),6.63,6630
+Congo,6.32,6320
+Senegal,6.25,6250
+Tajikistan,6.13,6130
+El Salvador,5.91,5910
+Kyrgyzstan,5.65,5650
+Georgia,5.32,5320
+Bahamas,5.25,5250
+Papua New Guinea,4.81,4810
+Albania,4.62,4620
+Equatorial Guinea,4.61,4610
+Gabon,4.57,4570
+Mauritius,4.55,4550
+Botswana,4.52,4520
+Nicaragua,4.47,4470
+Gibraltar,4.38,4380
+Namibia,4.06,4060
+Paraguay,3.97,3970
+Cambodia,3.86,3860
+Benin,3.47,3470
+Nepal,3.44,3440
+Iceland,3.41,3410
+Palestine,3.21,3210
+Madagascar,3.15,3150
+Malta,3.12,3120
+New Caledonia,3.04,3040
+Togo,2.85,2850
+Reunion,2.82,2820
+Mauritania,2.75,2750
+Zambia,2.67,2670
+"Congo, Dem Rep",2.65,2650
+Martinique,2.61,2610
+Macau,2.44,2440
+Mozambique,2.35,2350
+Guadeloupe,2.18,2180
+Haiti,2.06,2060
+Suriname,2.04,2040
+Uganda,1.93,1930
+Fiji,1.93,1930
+Montenegro,1.88,1880
+Djibouti,1.76,1760
+Guam,1.71,1710
+Guyana,1.51,1510
+Burkina Faso,1.43,1430
+Seychelles,1.42,1420
+Barbados,1.39,1390
+Swaziland,1.38,1380
+Niger,1.34,1340
+Guinea,1.33,1330
+Malawi,1.31,1310
+Sierra Leone,1.31,1310
+Laos,1.24,1240
+Wake Island,1.23,1230
+French Guiana,1.12,1120
+Aruba,1.09,1090
+French Polynesia,1.07,1070
+Belize,0.94,940
+Maldives,0.92,920
+Somalia,0.90,900
+Afghanistan,0.83,830
+Faroe Islands,0.80,800
+Eritrea,0.77,770
+Mali,0.74,740
+Rwanda,0.74,740
+Bermuda,0.71,710
+Antigua and Barbuda,0.69,690
+Liberia,0.69,690
+American Samoa,0.67,670
+Timor-Leste (East Timor),0.63,630
+Greenland,0.61,610
+Guinea-Bissau,0.46,460
+Gambia,0.44,440
+Cayman Islands,0.43,430
+Saint Lucia,0.41,410
+Burundi,0.37,370
+Cape Verde,0.34,340
+Bhutan,0.33,330
+Western Sahara,0.32,320
+Antarctica,0.31,310
+Grenada,0.30,300
+Saint Kitts and Nevis,0.30,300
+Central African Republic,0.29,290
+Chad,0.29,290
+Solomon Islands,0.29,290
+U.S. Pacific Islands,0.29,290
+Saint Vincent/Grenadines,0.27,270
+Lesotho,0.27,270
+Nauru,0.20,200
+Montserrat,0.15,150
+"Virgin Islands, British",0.15,150
+Comoros,0.15,150
+Sao Tome and Principe,0.15,150
+Cook Islands,0.15,150
+Samoa,0.15,150
+Tonga,0.15,150
+Vanuatu,0.15,150
+Dominica,0.14,140
+Saint Pierre and Miquelon,0.11,110
+Turks and Caicos Islands,0.08,80
+Falkland Islands (Islas Malvinas),0.05,50
+Kiribati,0.04,40
+Saint Helena,0.01,10
+Niue,0.01,10
