@@ -1,184 +1,184 @@
-name,maternal_mortalityUNICEF
-Afghanistan,396
-Albania,29
-Algeria,140
-Angola,477
-Argentina,52
-Armenia,25
-Australia,6
-Austria,4
-Azerbaijan,25
-Bahamas,80
-Bahrain,15
-Bangladesh,176
-Barbados,27
-Belarus,4
-Belgium,7
-Belize,28
-Benin,405
-Bhutan,148
-Bolivia,206
-Bosnia and Herzegovina,11
-Botswana,129
-Brazil,44
-Brunei Darussalam,23
-Bulgaria,11
-Burkina Faso,371
-Burundi,712
-Cabo Verde,42
-Cambodia,161
-Cameroon,596
-Canada,7
-Central African Republic,882
-Chad,856
-Chile,22
-China,27
-Colombia,64
-Comoros,335
-Congo,442
-Costa Rica,25
-Cote d'Ivoire,645
-Croatia,8
-Cuba,39
-Cyprus,7
-Czech Republic,4
-Democratic People's Republic of Korea,82
-Democratic Republic of the Congo,693
-Denmark,6
-Djibouti,229
-Dominican Republic,92
-Ecuador,64
-Egypt,33
-El Salvador,54
-Equatorial Guinea,342
-Eritrea,501
-Estonia,9
-Ethiopia,353
-Fiji,30
-Finland,3
-France,8
-Gabon,291
-Gambia,706
-Georgia,36
-Germany,6
-Ghana,319
-Greece,3
-Grenada,27
-Guatemala,88
-Guinea,679
-Guinea-Bissau,549
-Guyana,229
-Haiti,359
-Honduras,129
-Hungary,17
-Iceland,3
-India,174
-Indonesia,126
-Iran,25
-Iraq,50
-Ireland,8
-Israel,5
-Italy,4
-Jamaica,89
-Japan,5
-Jordan,58
-Kazakhstan,12
-Kenya,510
-Kiribati,90
-Kuwait,4
-Kyrgyzstan,76
-Lao,197
-Latvia,18
-Lebanon,15
-Lesotho,487
-Liberia,725
-Libya,9
-Lithuania,10
-Luxembourg,10
-Madagascar,353
-Malawi,634
-Malaysia,40
-Maldives,68
-Mali,587
-Malta,9
-Mauritania,602
-Mauritius,53
-Mexico,38
-Micronesia,100
-Mongolia,44
-Montenegro,7
-Morocco,121
-Mozambique,489
-Myanmar,178
-Namibia,265
-Nepal,258
-Netherlands,7
-New Zealand,11
-Nicaragua,150
-Niger,553
-Nigeria,814
-Norway,5
-State of Palestine,45
-Oman,17
-Pakistan,178
-Panama,94
-Papua New Guinea,215
-Paraguay,132
-Peru,68
-Philippines,114
-Poland,3
-Portugal,10
-Puerto Rico,14
-Qatar,13
-Republic of Korea,11
-Republic of Moldova,23
-Romania,31
-Russian Federation,25
-Rwanda,290
-Saint Lucia,48
-Samoa,51
-Sao Tome and Principe,156
-Saudi Arabia,12
-Senegal,315
-Serbia,17
-Sierra Leone,1360
-Singapore,10
-Slovakia,6
-Slovenia,9
-Solomon Islands,114
-Somalia,732
-South Africa,138
-South Sudan,789
-Spain,5
-Sri Lanka,30
-St Vincent and the Grenadines,45
-Sudan,311
-Suriname,155
-Swaziland,389
-Sweden,4
-Switzerland,5
-Syrian Arab Republic,68
-Tajikistan,32
-Tanzania,398
-TFYR Macedonia,8
-Thailand,20
-Timor-Leste,215
-Togo,368
-Tonga,124
-Trinidad and Tobago,63
-Tunisia,62
-Turkey,16
-Turkmenistan,42
-Uganda,343
-Ukraine,24
-United Arab Emirates,6
-United Kingdom,9
-United States of America,14
-Uruguay,15
-Uzbekistan,36
-Vanuatu,78
-Venezuela,95
-Viet Nam,54
-Yemen,385
-Zambia,224
-Zimbabwe,443
+country_code,maternal_mortalityUNICEF
+AFG,396
+ALB,29
+DZA,140
+AGO,477
+ARG,52
+ARM,25
+AUS,6
+AUT,4
+AZE,25
+BHS,80
+BHR,15
+BGD,176
+BRB,27
+BLR,4
+BEL,7
+BLZ,28
+BEN,405
+BTN,148
+BOL,206
+BIH,11
+BWA,129
+BRA,44
+BRN,23
+BGR,11
+BFA,371
+BDI,712
+CPV,42
+KHM,161
+CMR,596
+CAN,7
+CAF,882
+TCD,856
+CHL,22
+CHN,27
+COL,64
+COM,335
+COG,442
+CRI,25
+CIV,645
+HRV,8
+CUB,39
+CYP,7
+CZE,4
+PRK,82
+COD,693
+DNK,6
+DJI,229
+DOM,92
+ECU,64
+EGY,33
+SLV,54
+GNQ,342
+ERI,501
+EST,9
+ETH,353
+FJI,30
+FIN,3
+FRA,8
+GAB,291
+GMB,706
+GEO,36
+DEU,6
+GHA,319
+GRC,3
+GRD,27
+GTM,88
+GIN,679
+GNB,549
+GUY,229
+HTI,359
+HND,129
+HUN,17
+ISL,3
+IND,174
+IDN,126
+IRN,25
+IRQ,50
+IRL,8
+ISR,5
+ITA,4
+JAM,89
+JPN,5
+JOR,58
+KAZ,12
+KEN,510
+KIR,90
+KWT,4
+KGZ,76
+LAO,197
+LVA,18
+LBN,15
+LSO,487
+LBR,725
+LBY,9
+LTU,10
+LUX,10
+MDG,353
+MWI,634
+MYS,40
+MDV,68
+MLI,587
+MLT,9
+MRT,602
+MUS,53
+MEX,38
+FSM,100
+MNG,44
+MNE,7
+MAR,121
+MOZ,489
+MMR,178
+NAM,265
+NPL,258
+NLD,7
+NZL,11
+NIC,150
+NER,553
+NGA,814
+NOR,5
+PSE,45
+OMN,17
+PAK,178
+PAN,94
+PNG,215
+PRY,132
+PER,68
+PHL,114
+POL,3
+PRT,10
+PRI,14
+QAT,13
+KOR,11
+MDA,23
+ROU,31
+RUS,25
+RWA,290
+LCA,48
+WSM,51
+STP,156
+SAU,12
+SEN,315
+SRB,17
+SLE,1360
+SGP,10
+SVK,6
+SVN,9
+SLB,114
+SOM,732
+ZAF,138
+SSD,789
+ESP,5
+LKA,30
+VCT,45
+SDN,311
+SUR,155
+SWZ,389
+SWE,4
+CHE,5
+SYR,68
+TJK,32
+TZA,398
+MKD,8
+THA,20
+TLS,215
+TGO,368
+TON,124
+TTO,63
+TUN,62
+TUR,16
+TKM,42
+UGA,343
+UKR,24
+ARE,6
+GBR,9
+USA,14
+URY,15
+UZB,36
+VUT,78
+VEN,95
+VNM,54
+YEM,385
+ZMB,224
+ZWE,443
