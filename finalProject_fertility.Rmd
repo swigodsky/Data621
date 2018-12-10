@@ -21,7 +21,7 @@ fertility <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/maste
 country_code_df <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/country_codes.csv", stringsAsFactors = TRUE)
 country_code_df$region_num <- as.factor(country_code_df$region_num)
 fertility <- left_join(fertility,country_code_df,by="country_code")
-fertility <- subset(fertility, select=-c(order,country_code,country_number))
+fertility <- subset(fertility, select=-c(order,country_number))
 
 head(fertility)
 nrow(fertility)
@@ -216,6 +216,39 @@ There are 190 missing values.  There are so many missing values that there is no
 ```{r remove_lowest_quint,echo=FALSE, message=FALSE,warning=FALSE}
 fertility = subset(fertility, select=-c(lowest_quint_income_share.csv))
 ```  
+ 
+####Exploring Maternal Mortality
+
+There are 139 missing values.  To address this large number of missing values, we will take data from UNICEF at the following website https://data.unicef.org/topic/maternal-health/maternal-mortality/ and use the values posted there from 2015 for the missing values.
+
+
+```{r mat_mortUNICEF, echo=FALSE, message=FALSE,warning=FALSE}
+mat_mortUNICEF <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/maternal_mortality2015.csv", stringsAsFactors = FALSE)
+fertility <- fertility %>%
+  left_join(mat_mortUNICEF, by ="country_code")
+fertility$maternal_mortality[is.na(fertility$maternal_mortality)] <- fertility$maternal_mortalityUNICEF
+fertility <- subset(fertility, select=-c(maternal_mortalityUNICEF))
+summary(fertility$maternal_mortality)
+```
+
+```{r matmorth, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$maternal_mortality, ylab="Maternal Mortality")
+hist(fertility$maternal_mortality, xlab="Maternal Mortality",main="Histogram of Maternal Mortality")
+boxplot(fertility$maternal_mortality, main="Maternal Mortality")
+ggplot(fertility, aes(x=region,y=maternal_mortality)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+summary(fertility$maternal_mortality)
+```
+
+With the added data, not there are only 21 missing values for maternal mortality.  The data is skewed to the right, with the presence of outliers above a value of 500. There is a relationship between region and maternal mortality so missing values will be imputed with the median maternal mortality for the region the country is in. 
+
+```{r mat_mort_impute,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_mother_mort=median(maternal_mortality))
+fertility$maternal_mortality[is.na(fertility$maternal_mortality)] <- fertility$med_mother_mort
+fertility = subset(fertility, select=-c(med_mother_mort))
+``` 
+ 
  
 ```{r correlation, echo=FALSE, fig.width=10, message=FALSE}
 # <- cor(fertility, method = "pearson",use="complete.obs")
