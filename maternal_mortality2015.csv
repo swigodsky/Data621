@@ -1,184 +1,184 @@
-country_code,name,maternal_mortalityUNICEF
-AFG,Afghanistan,396
-ALB,Albania,29
-DZA,Algeria,140
-AGO,Angola,477
-ARG,Argentina,52
-ARM,Armenia,25
-AUS,Australia,6
-AUT,Austria,4
-AZE,Azerbaijan,25
-BHS,Bahamas,80
-BHR,Bahrain,15
-BGD,Bangladesh,176
-BRB,Barbados,27
-BLR,Belarus,4
-BEL,Belgium,7
-BLZ,Belize,28
-BEN,Benin,405
-BTN,Bhutan,148
-BOL,Bolivia,206
-BIH,Bosnia and Herzegovina,11
-BWA,Botswana,129
-BRA,Brazil,44
-BRN,Brunei Darussalam,23
-BGR,Bulgaria,11
-BFA,Burkina Faso,371
-BDI,Burundi,712
-CPV,Cabo Verde,42
-KHM,Cambodia,161
-CMR,Cameroon,596
-CAN,Canada,7
-CAF,Central African Republic,882
-TCD,Chad,856
-CHL,Chile,22
-CHN,China,27
-COL,Colombia,64
-COM,Comoros,335
-COG,Congo,442
-CRI,Costa Rica,25
-CIV,Cote d'Ivoire,645
-HRV,Croatia,8
-CUB,Cuba,39
-CYP,Cyprus,7
-CZE,Czech Republic,4
-PRK,Democratic People's Republic of Korea,82
-COD,Democratic Republic of the Congo,693
-DNK,Denmark,6
-DJI,Djibouti,229
-DOM,Dominican Republic,92
-ECU,Ecuador,64
-EGY,Egypt,33
-SLV,El Salvador,54
-GNQ,Equatorial Guinea,342
-ERI,Eritrea,501
-EST,Estonia,9
-ETH,Ethiopia,353
-FJI,Fiji,30
-FIN,Finland,3
-FRA,France,8
-GAB,Gabon,291
-GMB,Gambia,706
-GEO,Georgia,36
-DEU,Germany,6
-GHA,Ghana,319
-GRC,Greece,3
-GRD,Grenada,27
-GTM,Guatemala,88
-GIN,Guinea,679
-GNB,Guinea-Bissau,549
-GUY,Guyana,229
-HTI,Haiti,359
-HND,Honduras,129
-HUN,Hungary,17
-ISL,Iceland,3
-IND,India,174
-IDN,Indonesia,126
-IRN,Iran,25
-IRQ,Iraq,50
-IRL,Ireland,8
-ISR,Israel,5
-ITA,Italy,4
-JAM,Jamaica,89
-JPN,Japan,5
-JOR,Jordan,58
-KAZ,Kazakhstan,12
-KEN,Kenya,510
-KIR,Kiribati,90
-KWT,Kuwait,4
-KGZ,Kyrgyzstan,76
-LAO,Lao,197
-LVA,Latvia,18
-LBN,Lebanon,15
-LSO,Lesotho,487
-LBR,Liberia,725
-LBY,Libya,9
-LTU,Lithuania,10
-LUX,Luxembourg,10
-MDG,Madagascar,353
-MWI,Malawi,634
-MYS,Malaysia,40
-MDV,Maldives,68
-MLI,Mali,587
-MLT,Malta,9
-MRT,Mauritania,602
-MUS,Mauritius,53
-MEX,Mexico,38
-FSM,Micronesia,100
-MNG,Mongolia,44
-MNE,Montenegro,7
-MAR,Morocco,121
-MOZ,Mozambique,489
-MMR,Myanmar,178
-NAM,Namibia,265
-NPL,Nepal,258
-NLD,Netherlands,7
-NZL,New Zealand,11
-NIC,Nicaragua,150
-NER,Niger,553
-NGA,Nigeria,814
-NOR,Norway,5
-PSE,State of Palestine,45
-OMN,Oman,17
-PAK,Pakistan,178
-PAN,Panama,94
-PNG,Papua New Guinea,215
-PRY,Paraguay,132
-PER,Peru,68
-PHL,Philippines,114
-POL,Poland,3
-PRT,Portugal,10
-PRI,Puerto Rico,14
-QAT,Qatar,13
-KOR,Republic of Korea,11
-MDA,Republic of Moldova,23
-ROU,Romania,31
-RUS,Russian Federation,25
-RWA,Rwanda,290
-LCA,Saint Lucia,48
-WSM,Samoa,51
-STP,Sao Tome and Principe,156
-SAU,Saudi Arabia,12
-SEN,Senegal,315
-SRB,Serbia,17
-SLE,Sierra Leone,1360
-SGP,Singapore,10
-SVK,Slovakia,6
-SVN,Slovenia,9
-SLB,Solomon Islands,114
-SOM,Somalia,732
-ZAF,South Africa,138
-SSD,South Sudan,789
-ESP,Spain,5
-LKA,Sri Lanka,30
-VCT,St Vincent and the Grenadines,45
-SDN,Sudan,311
-SUR,Suriname,155
-SWZ,Swaziland,389
-SWE,Sweden,4
-CHE,Switzerland,5
-SYR,Syrian Arab Republic,68
-TJK,Tajikistan,32
-TZA,Tanzania,398
-MKD,TFYR Macedonia,8
-THA,Thailand,20
-TLS,Timor-Leste,215
-TGO,Togo,368
-TON,Tonga,124
-TTO,Trinidad and Tobago,63
-TUN,Tunisia,62
-TUR,Turkey,16
-TKM,Turkmenistan,42
-UGA,Uganda,343
-UKR,Ukraine,24
-ARE,United Arab Emirates,6
-GBR,United Kingdom,9
-USA,United States of America,14
-URY,Uruguay,15
-UZB,Uzbekistan,36
-VUT,Vanuatu,78
-VEN,Venezuela,95
-VNM,Viet Nam,54
-YEM,Yemen,385
-ZMB,Zambia,224
-ZWE,Zimbabwe,443
+name,maternal_mortalityUNICEF
+Afghanistan,396
+Albania,29
+Algeria,140
+Angola,477
+Argentina,52
+Armenia,25
+Australia,6
+Austria,4
+Azerbaijan,25
+Bahamas,80
+Bahrain,15
+Bangladesh,176
+Barbados,27
+Belarus,4
+Belgium,7
+Belize,28
+Benin,405
+Bhutan,148
+Bolivia,206
+Bosnia and Herzegovina,11
+Botswana,129
+Brazil,44
+Brunei Darussalam,23
+Bulgaria,11
+Burkina Faso,371
+Burundi,712
+Cabo Verde,42
+Cambodia,161
+Cameroon,596
+Canada,7
+Central African Republic,882
+Chad,856
+Chile,22
+China,27
+Colombia,64
+Comoros,335
+Congo,442
+Costa Rica,25
+Cote d'Ivoire,645
+Croatia,8
+Cuba,39
+Cyprus,7
+Czech Republic,4
+Democratic People's Republic of Korea,82
+Democratic Republic of the Congo,693
+Denmark,6
+Djibouti,229
+Dominican Republic,92
+Ecuador,64
+Egypt,33
+El Salvador,54
+Equatorial Guinea,342
+Eritrea,501
+Estonia,9
+Ethiopia,353
+Fiji,30
+Finland,3
+France,8
+Gabon,291
+Gambia,706
+Georgia,36
+Germany,6
+Ghana,319
+Greece,3
+Grenada,27
+Guatemala,88
+Guinea,679
+Guinea-Bissau,549
+Guyana,229
+Haiti,359
+Honduras,129
+Hungary,17
+Iceland,3
+India,174
+Indonesia,126
+Iran,25
+Iraq,50
+Ireland,8
+Israel,5
+Italy,4
+Jamaica,89
+Japan,5
+Jordan,58
+Kazakhstan,12
+Kenya,510
+Kiribati,90
+Kuwait,4
+Kyrgyzstan,76
+Lao,197
+Latvia,18
+Lebanon,15
+Lesotho,487
+Liberia,725
+Libya,9
+Lithuania,10
+Luxembourg,10
+Madagascar,353
+Malawi,634
+Malaysia,40
+Maldives,68
+Mali,587
+Malta,9
+Mauritania,602
+Mauritius,53
+Mexico,38
+Micronesia,100
+Mongolia,44
+Montenegro,7
+Morocco,121
+Mozambique,489
+Myanmar,178
+Namibia,265
+Nepal,258
+Netherlands,7
+New Zealand,11
+Nicaragua,150
+Niger,553
+Nigeria,814
+Norway,5
+State of Palestine,45
+Oman,17
+Pakistan,178
+Panama,94
+Papua New Guinea,215
+Paraguay,132
+Peru,68
+Philippines,114
+Poland,3
+Portugal,10
+Puerto Rico,14
+Qatar,13
+Republic of Korea,11
+Republic of Moldova,23
+Romania,31
+Russian Federation,25
+Rwanda,290
+Saint Lucia,48
+Samoa,51
+Sao Tome and Principe,156
+Saudi Arabia,12
+Senegal,315
+Serbia,17
+Sierra Leone,1360
+Singapore,10
+Slovakia,6
+Slovenia,9
+Solomon Islands,114
+Somalia,732
+South Africa,138
+South Sudan,789
+Spain,5
+Sri Lanka,30
+St Vincent and the Grenadines,45
+Sudan,311
+Suriname,155
+Swaziland,389
+Sweden,4
+Switzerland,5
+Syrian Arab Republic,68
+Tajikistan,32
+Tanzania,398
+TFYR Macedonia,8
+Thailand,20
+Timor-Leste,215
+Togo,368
+Tonga,124
+Trinidad and Tobago,63
+Tunisia,62
+Turkey,16
+Turkmenistan,42
+Uganda,343
+Ukraine,24
+United Arab Emirates,6
+United Kingdom,9
+United States of America,14
+Uruguay,15
+Uzbekistan,36
+Vanuatu,78
+Venezuela,95
+Viet Nam,54
+Yemen,385
+Zambia,224
+Zimbabwe,443
