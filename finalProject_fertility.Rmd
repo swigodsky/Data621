@@ -162,7 +162,7 @@ The median and mean of cell subscriptions per 100 population are about the same.
 ```{r medcell,echo=FALSE, message=FALSE,warning=FALSE}
 fertility <- fertility %>%
   group_by(region) %>%
-  mutate(med_cell=median(cell_subs_per_100))
+  mutate(med_cell=median(cell_subs_per_100,na.rm=TRUE))
 fertility$cell_subs_per_100[is.na(fertility$cell_subs_per_100)] <- fertility$med_cell
 fertility = subset(fertility, select=-c(med_cell))
 ```
@@ -175,13 +175,15 @@ boxplot(fertility$employment_to_pop_ratio, main="Employment to Population Ratio"
 ggplot(fertility, aes(x=region,y=employment_to_pop_ratio)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
 ```
  
- The employment to population value varies dramatically by region.  We will impute the median for the employment to population ratio per region for the missing values.
+ The employment to population value varies dramatically by region.  We will impute the median for the employment to population ratio per region for the missing values.  There are no values for middle Africa so we will impute the median from eastern Africa.
 
 ```{r medemploy,echo=FALSE, message=FALSE,warning=FALSE}
 fertility <- fertility %>%
   group_by(region) %>%
-  mutate(med_employ=median(employment_to_pop_ratio))
+  mutate(med_employ=median(employment_to_pop_ratio,na.rm=TRUE))
 fertility$employment_to_pop_ratio[is.na(fertility$employment_to_pop_ratio)] <- fertility$med_employ
+east_afr <- filter(fertility, region=="eastern_africa")
+fertility$employment_to_pop_ratio[is.na(fertility$employment_to_pop_ratio)] <- east_afr$med_employ
 fertility = subset(fertility, select=-c(med_employ))
 ``` 
 
@@ -193,13 +195,15 @@ boxplot(fertility$female_employment_to_pop_ratio, main="Female Employment to Pop
 ggplot(fertility, aes(x=region,y=female_employment_to_pop_ratio)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
 ```
  
-There are 111 missing values.  The female employment to population value varies dramatically by region.  We will impute the median for the female employment to population ratio per region for the missing values.
+There are 111 missing values.  The female employment to population value varies dramatically by region.  We will impute the median for the female employment to population ratio per region for the missing values.  There are no values for middle Africa so we will impute the median from eastern Africa.
 
 ```{r medfem_employ,echo=FALSE, message=FALSE,warning=FALSE}
 fertility <- fertility %>%
   group_by(region) %>%
-  mutate(med_fem_employ=median(female_employment_to_pop_ratio))
+  mutate(med_fem_employ=median(female_employment_to_pop_ratio,na.rm=TRUE))
 fertility$female_employment_to_pop_ratio[is.na(fertility$female_employment_to_pop_ratio)] <- fertility$med_fem_employ
+east_afr <- filter(fertility, region=="eastern_africa")
+fertility$female_employment_to_pop_ratio[is.na(fertility$female_employment_to_pop_ratio)] <- east_afr$med_fem_employ
 fertility = subset(fertility, select=-c(med_fem_employ))
 ```  
  
@@ -244,13 +248,104 @@ With the added data, not there are only 21 missing values for maternal mortality
 ```{r mat_mort_impute,echo=FALSE, message=FALSE,warning=FALSE}
 fertility <- fertility %>%
   group_by(region) %>%
-  mutate(med_mother_mort=median(maternal_mortality))
+  mutate(med_mother_mort=median(maternal_mortality,na.rm=TRUE))
 fertility$maternal_mortality[is.na(fertility$maternal_mortality)] <- fertility$med_mother_mort
 fertility = subset(fertility, select=-c(med_mother_mort))
 ``` 
  
+####Exploring Unmet Family Planning Need
+```{r unmet_fam_plan, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$unmet_family_planning_need, ylab="Percent Unmet Family Planning Need")
+hist(fertility$unmet_family_planning_need, xlab="Percent Unmet Family Planning Need",main="Histogram of Unmet Family Planning Need")
+boxplot(fertility$unmet_family_planning_need, main="Percent Unmet Family Planning Need")
+ggplot(fertility, aes(x=region,y=unmet_family_planning_need)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+``` 
+
+There are 78 missing values.  There are differences in median according to region.  I will impute the median of the region for the missing values.
+
+```{r unmet_fam_impute,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_unmet_fam=median(unmet_family_planning_need,na.rm=TRUE))
+fertility$unmet_family_planning_need[is.na(fertility$unmet_family_planning_need)] <- fertility$med_unmet_fam
+fertility = subset(fertility, select=-c(med_unmet_fam))
+``` 
+
+####Exploring Percentage of Urban Population Living In Slums
+```{r slums, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$urban_pop_in_slums, ylab="Percentage of Urban Population Living In Slums")
+hist(fertility$urban_pop_in_slums, xlab="Percentage of Urban Population Living In Slums",main="Histogram of Percentage of Urban Population Living In Slums")
+boxplot(fertility$urban_pop_in_slums, main="Percentage of Urban Population Living In Slums")
+ggplot(fertility, aes(x=region,y=urban_pop_in_slums)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+``` 
+
+There are 133 missing values.  There are differences in median according to region but some regions are missing values entirely.  I will impute the median of the region for the missing values and if there are no values for a region, we will impute zero for the missing values.
+
+```{r slum_impute,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_slums=median(urban_pop_in_slums,na.rm=TRUE))
+fertility$urban_pop_in_slums[is.na(fertility$urban_pop_in_slums)] <- fertility$med_slums
+fertility = subset(fertility, select=-c(med_slums))
+fertility$urban_pop_in_slums[is.na(fertility$urban_pop_in_slums)] <- 0
+``` 
+
+####Exploring The Literacy Ratio of Women to Men
+
+There are 146 missing values.  To address this large number of missing values, we will take data from the following website https://www.nationmaster.com/country-info/stats/Education/Women-to-men-parity-index/As-ratio-of-literacy-rates/Aged-15--24#amount and use the values posted for the missing values.
+
+
+```{r lit, echo=FALSE, message=FALSE,warning=FALSE}
+literacy <- read.csv("https://raw.githubusercontent.com/swigodsky/Data621/master/women_men_literacy.csv", stringsAsFactors = FALSE)
+fertility <- fertility %>%
+  left_join(literacy, by ="name")
+fertility$women_men_literacy_ratio[is.na(fertility$women_men_literacy_ratio)] <- fertility$women_men_literacy_ratioNEW
+fertility <- subset(fertility, select=-c(women_men_literacy_ratioNEW))
+summary(fertility$women_men_literacy_ratio)
+```
+
+Now there are only 51 missing values.
+
+```{r litplots, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$women_men_literacy_ratio, ylab="Literacy Ratio of Women to Men")
+hist(fertility$women_men_literacy_ratio, xlab="Literacy Ratio of Women to Men",main="Histogram of Literacy Ratio of Women to Men")
+boxplot(fertility$women_men_literacy_ratio, main="Literacy Ratio of Women to Men")
+ggplot(fertility, aes(x=region,y=women_men_literacy_ratio)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+summary(fertility$women_men_literacy_ratio)
+```
+
+The median for most regions is close to 1, which means that literacy rate for women is equal to the literacy rate for men. The third quartile for most regions is close to the median of 1.  There are some variations be region.  We will impute the median of the region for missing values.
  
+
+```{r litrate_impute,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_lit=median(women_men_literacy_ratio,na.rm=TRUE))
+fertility$women_men_literacy_ratio[is.na(fertility$women_men_literacy_ratio)] <- fertility$med_lit
+fertility = subset(fertility, select=-c(med_lit))
+summary(fertility)
+head(fertility)
+``` 
+
+####Exploring Net Migration Per 1000
+```{r migration, echo=FALSE, message=FALSE, warning=FALSE}
+plot(fertility$net_migration_per_1000, ylab="Net Migration Per 1000")
+hist(fertility$net_migration_per_1000, xlab="Net Migration Per 1000",main="Histogram of Net Migration Per 1000")
+boxplot(fertility$net_migration_per_1000, main="Percentage of Net Migration Per 1000")
+ggplot(fertility, aes(x=region,y=net_migration_per_1000)) + geom_boxplot(aes(color=region)) + theme(axis.text.x = element_text(angle=90))
+``` 
+
+There are 20 missing values. The war in Syria is part of what accounts for striking difference in migration between the middle east and other parts of the world.  We will impute the median of the region for missing values.
+
+```{r migr_impute,echo=FALSE, message=FALSE,warning=FALSE}
+fertility <- fertility %>%
+  group_by(region) %>%
+  mutate(med_mig=median(net_migration_per_1000,na.rm=TRUE))
+fertility$net_migration_per_1000[is.na(fertility$net_migration_per_1000)] <- fertility$med_mig
+fertility = subset(fertility, select=-c(med_mig))
+``` 
+
 ```{r correlation, echo=FALSE, fig.width=10, message=FALSE}
-# <- cor(fertility, method = "pearson",use="complete.obs")
+#correlation <- cor(fertility, method = "pearson",use="complete.obs")
 #corrplot(correlation, type="upper", method="color")
 ```
