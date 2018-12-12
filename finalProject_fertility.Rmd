@@ -346,6 +346,9 @@ fertility = subset(fertility, select=-c(med_mig))
 ``` 
 
 ```{r correlation, echo=FALSE, fig.width=10, message=FALSE}
-#correlation <- cor(fertility, method = "pearson",use="complete.obs")
-#corrplot(correlation, type="upper", method="color")
+fertility_variables <- fertility
+fertility_variables <- subset(fertility_variables, select=-c(region,name,region_num,country_code))
+
+correlation <- cor(fertility_variables, method = "pearson",use="complete.obs")
+corrplot(correlation, type="upper", method="color")
 ```
