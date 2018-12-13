@@ -13,6 +13,8 @@ library(tidyr)
 library(dplyr)
 library(corrplot)
 library(ggplot2)
+library(car)
+library(rpart)
 ```
 
 
@@ -352,3 +354,272 @@ fertility_variables <- subset(fertility_variables, select=-c(region,name,region_
 correlation <- cor(fertility_variables, method = "pearson",use="complete.obs")
 corrplot(correlation, type="upper", method="color")
 ```
+
+Fertility rate is negatively correlated with Cell subscriptions per 100 population and high ratios of literacy rates of women to men.
+
+Fertility rate is positively correlated with the percent of children sleeping under insecticide treated nets, unmet family planning need and the percent of urban population living in slums.  
+
+Having a high fertility rate may lead to a high unmet family planning need.
+
+The female employment to population ratio is positively correlated with the employment to population ratio.
+
+Cell subscriptions per 100 in the population is negatively correlated with the percent of children sleeping under insecticide treated nets and the percentage of the urban population living in slums.
+
+
+##Build Models
+####Creating a Test Set and Training Set
+```{r model1_training_testing, echo=FALSE, cache=TRUE}
+set.seed(15)
+n <- nrow(fertility_variables)
+shuffle_df1 <- fertility_variables[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train1 <- shuffle_df1[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test1 <- shuffle_df1[test_indeces,]
+```
+
+
+####Backward Elimination - Linear Regression Model
+A linear regression model will be built using the backward elimination model.  Initially all of the variables will be present, and then they will be removed one at a time.  The variable with the highest p value, which has the least affect on fertility rate, will be elinimated first.  Variables will be removed until every predictor has a p value below 0.05.
+
+
+```{r backward-elimination1, echo=FALSE}
+fert_lm <- lm(fertility_rate_children_per_woman ~ ., data=train1)
+summary(fert_lm)
+```
+
+Female employment to population ratio has the (highest p value) lowest affect on fertility rate and will be removed next.  
+```{r remove_femEmplPop, echo=FALSE}
+fert_lm <- update(fert_lm, .~. -female_employment_to_pop_ratio, data = train1)
+summary(fert_lm)
+```
+
+
+Employment to population ratio has the (highest p value) lowest affect on fertility rate and will be removed next.  
+```{r remove_employToPop, echo=FALSE}
+fert_lm <- update(fert_lm, .~. -employment_to_pop_ratio, data = train1)
+summary(fert_lm)
+```
+
+
+Maternal mortality has the (highest p value) lowest affect on fertility rate and will be removed next.  
+```{r remove_maternal_mortality, echo=FALSE}
+fert_lm <- update(fert_lm, .~. -maternal_mortality, data = train1)
+summary(fert_lm)
+```
+
+
+Carbon dioxide emissions has the (highest p value) lowest affect on fertility rate and will be removed next.  
+```{r remove_CO2, echo=FALSE}
+fert_lm <- update(fert_lm, .~. -carbon_dioxide_emissions, data = train1)
+summary(fert_lm)
+```
+
+Net migration per 100 has the (highest p value) lowest affect on fertility rate and will be removed next.  
+```{r remove_migr, echo=FALSE}
+fert_lm <- update(fert_lm, .~. -net_migration_per_1000, data = train1)
+summary(fert_lm)
+```
+
+
+Urban population in slums has the (highest p value) lowest affect on fertility rate and will be removed next.  
+```{r remove_slums, echo=FALSE}
+fert_lm <- update(fert_lm, .~. -urban_pop_in_slums, data = train1)
+summary(fert_lm)
+```
+
+Fertility rate = 0.039percent_children_malaria_nets + 0.026unmet_family_planning_need - 0.008cell_subs_per_100 - 1.55women_men_literacy_ratio + 4.3
+
+Places with a higher percentage of children sleeping under insecticide treated nets have higher fertility rates.
+Places with higher levels of unmet family planning need have higher fertility rates.
+Places with higher levels of cellular subscriptions have lower fertility rates.
+Places with a higher ratio of women's literacy to men's literacy have higher fertility rates.
+
+The R squared value is 0.5688.  56.88% of the variation in fertility rate is accounted for by this model.
+
+```{r res1, echo=FALSE}
+qqnorm(resid(fert_lm))
+qqline(resid(fert_lm))
+```
+
+The residuals at the lower end are not nearly normal.  However much of the residuals do follow a normal distribution.
+
+
+####Prediction from Model 1
+The root mean square error from model 3 is
+```{r rmse1, echo=FALSE}
+pred1 <- predict(fert_lm, newdata=test1, type="response")
+error <- pred1-test1$fertility_rate_children_per_woman
+rmse1 <- sqrt(mean(error^2))
+rmse1
+```
+
+On average, the predicion for the fertility rate, is off by 1.15.
+
+####Muliticolinearity Test
+```{r multi_collinearity, echo=FALSE}
+vif(fert_lm)
+```
+
+Since each of the variance inflation factor values are below 5, there is not an issue with multicolinearity.
+
+####Cook's Distance
+```{r cooksdist, echo=FALSE ,warning=FALSE, message=FALSE}
+ggplot()+geom_point(aes(x=seq_along(cooks.distance(fert_lm)),y=cooks.distance(fert_lm)),color='blue',shape=20,size=2)+ theme(panel.background = element_rect(fill = '#d3dded'))+labs(x='Linear Regression Model',y="Cook's Distance")+ylim(0,.004)
+```
+
+The values of Cook's distance are very low.  This indicates that there is not an issue with outliers.
+
+####Model 2 Principal Component Analysis
+The code to create the PCA models was taken from:
+http://www.gastonsanchez.com/visually-enforced/how-to/2012/06/17/PCA-in-R/
+and
+https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
+
+```{r pca, echo=FALSE, message=FALSE,warning=FALSE}
+
+prin_comp <- prcomp(train1, scale. = T)
+
+train.data <- data.frame(fert = train1$fertility_rate_children_per_woman, prin_comp$x)
+
+#decision tree
+fert_rpart <- rpart(fert ~ .,data = train.data, method = "anova")
+#fert_rpart
+
+test.data <- predict(prin_comp, newdata = test1)
+test.data <- as.data.frame(test.data)
+
+#make prediction on test data
+pred2 <- predict(fert_rpart, test.data)
+
+error <- pred2-test1$fertility_rate_children_per_woman
+rmse2 <- sqrt(mean(error^2))
+rmse2
+```
+
+The root mean square error is 0.83.  On average, a prediction of the fertility rate is off by 0.83.
+
+####Scree Plot
+
+```{r screeplot, echo=FALSE}
+std_dev <- prin_comp$sdev
+pr_var <- std_dev^2
+prop_varex <- pr_var/sum(pr_var)
+plot(prop_varex, xlab = "Principal Component",
+             ylab = "Proportion of Variance Explained",
+             type = "b")
+```
+
+About 99% of the variance is accounted for using 11 variables.
+
+
+```{r circleplot, echo=FALSE}
+circle <- function(center = c(0, 0), npoints = 100) {
+    r = 1
+    tt = seq(0, 2 * pi, length = npoints)
+    xx = center[1] + r * cos(tt)
+    yy = center[1] + r * sin(tt)
+    return(data.frame(x = xx, y = yy))
+}
+corcir = circle(c(0, 0), npoints = 100)
+
+# create data frame with correlations between variables and PCs
+correlations = as.data.frame(cor(train1, prin_comp$x))
+
+# data frame with arrows coordinates
+arrows = data.frame(x1 = c(0,0,0,0,0,0,0,0,0,0,0), y1 = c(0,0,0,0,0,0,0,0,0,0,0), x2 = correlations$PC1, 
+    y2 = correlations$PC2)
+
+# geom_path will do open circles
+ggplot() + geom_path(data = corcir, aes(x = x, y = y), colour = "gray65") + 
+    geom_segment(data = arrows, aes(x = x1, y = y1, xend = x2, yend = y2), colour = "gray65") + 
+    geom_text(data = correlations, aes(x = PC1, y = PC2, label = rownames(correlations))) + 
+    geom_hline(yintercept = 0, colour = "gray65") + geom_vline(xintercept = 0, 
+    colour = "gray65") + xlim(-1.1, 1.1) + ylim(-1.1, 1.1) + labs(x = "pc1 aixs", y = "pc2 axis") + ggtitle("PCA - Model 2 - Circle of correlations")
+```
+ 
+
+####Model 3 Principal Component Analysis
+It is hard to distinguish the variables in the graph above.  The next model will be built only based on the variables the correlation plot indicated as being correlated to fertility rate.
+```{r model3, echo=FALSE}
+fertility3 <- fertility
+fertility3 <- subset(fertility3, select=c(fertility_rate_children_per_woman,urban_pop_in_slums, unmet_family_planning_need, percent_children_malaria_nets, women_men_literacy_ratio, cell_subs_per_100))
+```
+
+####Creating a Test Set and Training Set
+```{r model1_training_testing, echo=FALSE, cache=TRUE}
+set.seed(25)
+n <- nrow(fertility_variables)
+shuffle_df3 <- fertility3[sample(n),]
+train_indeces <- 1:round(0.6*n)
+train3 <- shuffle_df3[train_indeces,]
+test_indeces <- (round(.6*n)+1):n
+test3 <- shuffle_df3[test_indeces,]
+```
+
+```{r pca, echo=FALSE, message=FALSE,warning=FALSE}
+
+prin_comp3 <- prcomp(train3, scale. = T)
+
+train.data3 <- data.frame(fert3 = train3$fertility_rate_children_per_woman, prin_comp$x)
+
+#decision tree
+fert_rpart3 <- rpart(fert3 ~ .,data = train.data3, method = "anova")
+#fert_rpart
+
+test.data3 <- predict(prin_comp3, newdata = test3)
+test.data3 <- as.data.frame(test.data3)
+
+#make prediction on test data
+pred3 <- predict(fert_rpart3, test.data3)
+
+error <- pred3-test3$fertility_rate_children_per_woman
+rmse3 <- sqrt(mean(error^2))
+rmse3
+```
+
+The root mean square error is 0.70.  On average, a prediction of the fertility rate is off by 0.70.
+
+####Scree Plot
+
+```{r screeplot, echo=FALSE}
+std_dev3 <- prin_comp3$sdev
+pr_var3 <- std_dev3^2
+prop_varex3 <- pr_var3/sum(pr_var3)
+plot(prop_varex3, xlab = "Principal Component",
+             ylab = "Proportion of Variance Explained",
+             type = "b")
+```
+
+About 98% of the variance in the data set is accounted for using 6 variables.
+
+
+```{r circleplot, echo=FALSE}
+circle <- function(center = c(0, 0), npoints = 100) {
+    r = 1
+    tt = seq(0, 2 * pi, length = npoints)
+    xx = center[1] + r * cos(tt)
+    yy = center[1] + r * sin(tt)
+    return(data.frame(x = xx, y = yy))
+}
+corcir = circle(c(0, 0), npoints = 100)
+
+train3 <- subset(train3, select=-c(fertility_rate_children_per_woman))
+# create data frame with correlations between variables and PCs
+correlations3 = as.data.frame(cor(train3, prin_comp3$x))
+
+# data frame with arrows coordinates
+arrows = data.frame(x1 = c(0,0,0,0,0), y1 = c(0,0,0,0,0), x2 = correlations3$PC1, 
+    y2 = correlations3$PC2)
+
+# geom_path will do open circles
+ggplot() + geom_path(data = corcir, aes(x = x, y = y), colour = "gray65") + 
+    geom_segment(data = arrows, aes(x = x1, y = y1, xend = x2, yend = y2), colour = "gray65") + 
+    geom_text(data = correlations3, aes(x = PC1, y = PC2, label = rownames(correlations3))) + 
+    geom_hline(yintercept = 0, colour = "gray65") + geom_vline(xintercept = 0, 
+    colour = "gray65") + xlim(-1.1, 1.1) + ylim(-1.1, 1.1) + labs(x = "pc1 aixs", y = "pc2 axis") + ggtitle("PCA - Model 3 - Circle of correlations")
+```
+
+Urban population in slums, the percent of children sleeping in insecticide treated nets, and unmet family planning need are more of the source of principal component 1.  They play a large role in the variation in the data. The ratio of the literacty rate between women and men is a large part of the source of principal component 2.
+
+
