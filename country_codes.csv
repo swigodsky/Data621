@@ -44,7 +44,7 @@ order,country_code,name,country_number,region_num,region
 45,CIV,Cote d'Ivoire,384,14,western_africa
 46,CMR,Cameroon,120,7,middle_africa
 47,COD,Congo,180,7,middle_africa
-48,COG,Congo,178,7,middle_africa
+48,COG,Congo2,178,7,middle_africa
 49,COK,Cook Islands,184,11,oceania
 50,COL,Colombia,170,12,south_america
 51,COM,Comoros,174,4,eastern_africa
@@ -172,7 +172,7 @@ order,country_code,name,country_number,region_num,region
 178,PNG,Papua New Guinea,598,11,oceania
 179,POL,Poland,616,6,european_union
 180,PRI,Puerto Rico,630,2,caribbean
-181,PRK,Korea,408,1,asia
+181,PRK,Korea2,408,1,asia
 182,PRT,Portugal,620,6,european_union
 183,PRY,Paraguay,600,12,south_america
 184,PSE,Palestinian Territory,0,8,middle_east
@@ -226,7 +226,7 @@ order,country_code,name,country_number,region_num,region
 235,VCT,Saint Vincent and the Grenadines,670,2,caribbean
 236,VEN,Venezuela,862,12,south_america
 237,VGB,Virgin Islands,92,2,caribbean
-238,VIR,Virgin Islands,850,2,caribbean
+238,VIR,Virgin Islands2,850,2,caribbean
 239,VNM,Viet Nam,704,1,asia
 240,VUT,Vanuatu,548,11,oceania
 241,WLF,Wallis and Futuna,876,11,oceania
